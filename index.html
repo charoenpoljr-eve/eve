@@ -142,6 +142,28 @@ tr.sect td{padding-top:22px;color:#fff;font-weight:600;border-bottom-color:rgba(
 .wxc .dn{font-size:9.5px;color:var(--mut);letter-spacing:.04em}
 .wx .note{margin:10px 0 0}
 @media(max-width:380px){.wxc{font-size:10px;min-height:80px}.wxc .wi{font-size:17px}}
+
+.qa{display:flex;gap:8px;margin:12px 0 0;flex-wrap:wrap;animation:up .7s .2s both}
+.chip{font:inherit;font-size:13px;color:var(--ink);padding:7px 14px;border-radius:99px;background:rgba(255,255,255,.07);border:1px solid var(--line);cursor:pointer}
+.chip:active{background:rgba(255,255,255,.18)}.chip[hidden]{display:none}
+a.drv{cursor:pointer;text-decoration:underline}.lk{font-size:10px;margin-right:4px}
+.sx{display:inline-block;padding:0 9px;border-radius:99px;background:rgba(255,255,255,.12);letter-spacing:.12em;font-size:.9em;cursor:pointer;user-select:none;-webkit-user-select:none}
+.lic{width:76px;height:76px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:32px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.lockv .chip{margin-top:16px;padding:10px 26px;font-size:15px}
+#pin{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,9,10,.7);backdrop-filter:blur(36px) saturate(1.5);-webkit-backdrop-filter:blur(36px) saturate(1.5);padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#pin.on{display:flex;animation:pin .25s ease both}
+@keyframes pin{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
+#pin h3{margin:0 0 6px;font-size:19px;font-weight:500}
+#pm{min-height:20px;margin:0 0 18px;font-size:13px;color:var(--mut)}
+#pd{display:flex;gap:18px;margin-bottom:46px}
+#pd i{width:13px;height:13px;border-radius:50%;border:1.5px solid #fff;transition:background .15s}
+#pd i.f{background:#fff}#pd.sh{animation:shk .45s}
+@keyframes shk{20%{transform:translateX(-12px)}40%{transform:translateX(10px)}60%{transform:translateX(-8px)}80%{transform:translateX(5px)}}
+#pg{display:grid;grid-template-columns:repeat(3,78px);gap:16px 22px}
+.pk{width:78px;height:78px;border-radius:50%;border:0;padding:0;color:#fff;font-family:inherit;font-size:34px;font-weight:300;line-height:1;background:rgba(255,255,255,.13);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:background .4s;-webkit-tap-highlight-color:transparent}
+.pk small{font-size:9.5px;font-weight:600;letter-spacing:.2em;margin-top:3px;height:10px}
+.pk:active{background:rgba(255,255,255,.5);transition:none}
+.pk.x{background:none;font-size:16px;font-weight:400}
 </style>
 </head>
 <body>
@@ -149,8 +171,10 @@ tr.sect td{padding-top:22px;color:#fff;font-weight:600;border-bottom-color:rgba(
 <div class="wrap">
 <header id="top"></header>
 <div id="st"><i></i><span>กำลังโหลด…</span></div>
+<div class="qa"><button class="chip" id="drvb">📎 <span></span></button><button class="chip" id="lkb" hidden></button></div>
 <main id="main"></main>
 </div>
+<div id="pin" aria-modal="true" role="dialog"><h3></h3><p id="pm"></p><div id="pd"><i></i><i></i><i></i><i></i></div><div id="pg"></div></div>
 <div class="dock"><div id="tabs"></div></div>
 <script>
 const SHEET="1psMuUep8pWPqqnPVS9w7y-55lToFBRbvvKu3BGkm5bQ";
@@ -200,8 +224,8 @@ const R=n=>Math.round(n*RATE).toLocaleString("en-US");
 const conv=s=>s.replace(/¥\s?CNY/g,"฿").replace(/\(¥\)/g,"(฿)").replace(/\(CNY\)/g,"(THB)")
   .replace(/CNY\s?([\d,]+(?:\.\d+)?)/g,(_,a)=>"฿"+R(nn(a)))
   .replace(/THB\s?([\d,]+(?:\.\d+)?)/g,(_,a)=>"฿"+Math.round(nn(a)).toLocaleString("en-US")).replace(/¥\s?([\d,]+(?:\.\d+)?)(?:\s?[–-]\s?¥?([\d,]+(?:\.\d+)?))?/g,(_,a,b)=>"฿"+R(nn(a))+(b?"–"+R(nn(b)):""));
-const esc=s=>conv(tr(String(s??""))).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const fmt=s=>esc(s).replace(/\n/g,"<br>").replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">เปิดลิงก์</a>');
+const esc0=s=>conv(tr(String(s??""))).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])),esc=s=>mask(esc0(s));
+const fmt=s=>esc(s).replace(/\n/g,"<br>").replace(/(?:Link:\s*)?https:\/\/drive\.google\.com\/[^\s<]*/g,'<a class="drv" role="button" tabindex="0">🔒 ใบจอง (Google Drive)</a>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">เปิดลิงก์</a>');
 const num=s=>{const n=parseFloat(String(s).replace(/[,¥]/g,""));return isNaN(n)?null:n};
 
 const T0=Date.UTC(2026,11,24,6,35),T1=Date.UTC(2026,11,30,11,25),S0=Date.UTC(2026,9,20);
@@ -434,8 +458,66 @@ function render(anim){
   const m=$("#main");m.classList.toggle("static",!anim);
   m.innerHTML=view(tabs[cur],cur);
   m.querySelectorAll(".rise").forEach(e=>io.observe(e));
-  counts(m);tick();xl(document.body);document.documentElement.lang=LG==="zh"?"zh-CN":LG;document.title=TTL[LG];
+  chips();counts(m);tick();xl(document.body);document.documentElement.lang=LG==="zh"?"zh-CN":LG;document.title=TTL[LG];
 }
+
+const DRIVE="https://drive.google.com/drive/folders/1sVreXvah_TnnyrbXIQCgCyjrJPcddg6h?usp=share_link";
+const PH="ODg4OA==";
+let UNL=false,buf="",pcb=null,fails=0,until=0,idle=0;
+function chips(){
+  $("#drvb span").textContent=WL("ใบจอง (Google Drive)","Booking files (Google Drive)","订单文件 (Google Drive)");
+  const l=$("#lkb");l.hidden=!UNL;l.textContent="🔓 "+WL("ล็อก","Lock","锁定");
+}
+const openDrive=()=>window.open(DRIVE,"_blank","noopener");
+function rr(){const q=()=>[...document.querySelectorAll("#main .card,#main .grp,#main li")],o=q().map(e=>e.classList.contains("open")),y=scrollY;render(false);q().forEach((e,i)=>o[i]&&e.classList.add("open"));scrollTo(0,y)}
+function relock(){UNL=false;clearTimeout(idle);rr()}
+function mask(s){
+  if(UNL)return s;
+  const X='<span class="sx" role="button" tabindex="0">••••••</span>';
+  return s.replace(/(PIN\s*)\d{4}\b/g,"$1"+X).replace(/(PNR:?\s*)[A-Z0-9]{6}\b/g,"$1"+X).replace(/\bNZEJCB\b/g,X).replace(/\b781-\d{7,}\b/g,X).replace(/(^|[^\d-])\d{9,}\b/g,(m,a)=>a+X).replace(/\*{4}\d{4}/g,X);
+}
+function paint(){
+  document.querySelectorAll("#pd i").forEach((d,i)=>d.classList.toggle("f",i<buf.length));
+  $("#pkx").textContent=buf.length?WL("ลบ","Delete","删除"):WL("ยกเลิก","Cancel","取消");
+}
+function askPin(cb){
+  if(UNL){cb&&cb();return}
+  pcb=cb||null;buf="";$("#pin h3").textContent=WL("ใส่รหัสผ่าน","Enter Passcode","输入密码");
+  $("#pm").textContent="";paint();$("#pin").classList.add("on");
+}
+function closePin(){$("#pin").classList.remove("on");pcb=null;buf="";paint()}
+function pkey(d){
+  if(Date.now()<until||buf.length>=4)return;
+  buf+=d;paint();if(buf.length<4)return;
+  if(buf===atob(PH)){
+    const f=pcb;fails=0;UNL=true;clearTimeout(idle);idle=setTimeout(relock,3e5);
+    if(f)f();$("#pin").classList.remove("on");pcb=null;buf="";rr();return;
+  }
+  const p=$("#pd");p.classList.remove("sh");void p.offsetWidth;p.classList.add("sh");
+  try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}
+  buf="";fails++;
+  if(fails>=5){fails=0;until=Date.now()+3e4;$("#pm").textContent=WL("ลองใหม่ใน 30 วินาที","Try again in 30 seconds","请30秒后再试");setTimeout(()=>{$("#pm").textContent=""},3e4)}
+  else $("#pm").textContent=WL("รหัสไม่ถูกต้อง ลองอีกครั้ง","Wrong passcode, try again","密码错误，请重试");
+  setTimeout(paint,380);
+}
+(function(){
+  const L=["","ABC","DEF","GHI","JKL","MNO","PQRS","TUV","WXYZ"];
+  $("#pg").innerHTML=L.map((s,i)=>`<button class="pk" data-k="${i+1}">${i+1}<small>${s}</small></button>`).join("")+'<span></span><button class="pk" data-k="0">0<small></small></button><button class="pk x" id="pkx" data-k="x"></button>';
+})();
+document.addEventListener("click",e=>{
+  const k=e.target.closest(".pk");
+  if(k){if(k.dataset.k==="x"){if(buf.length){buf=buf.slice(0,-1);paint()}else closePin()}else pkey(k.dataset.k);return}
+  if(e.target.closest("#drvb,a.drv")){e.preventDefault();askPin(openDrive);return}
+  if(e.target.closest(".sx")){askPin();return}
+  if(e.target.closest("#lkb"))relock();
+});
+document.addEventListener("keydown",e=>{
+  if(!$("#pin").classList.contains("on"))return;
+  if(/^\d$/.test(e.key))pkey(e.key);
+  else if(e.key==="Backspace"){buf=buf.slice(0,-1);paint()}
+  else if(e.key==="Escape")closePin();
+});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&UNL)relock()});
 function go(i){cur=i;history.replaceState(null,"","#t"+i);render(true);scrollTo({top:0})}
 document.addEventListener("click",e=>{
   const t=e.target.closest("#tabs button");if(t)return go(+t.dataset.i);
