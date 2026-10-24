@@ -1,1725 +1,369 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>จานนี้ — ตัวช่วยจัดการอาหารประจำวัน</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ทริปเซี่ยงไฮ้ 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ============ TOKENS ============ */
-:root{
-  --bg:#F6F4EE;
-  --surface:#FFFFFF;
-  --surface-alt:#EFEBE0;
-  --ink:#2A2822;
-  --ink-soft:#78735F;
-  --ink-faint:#A7A08A;
-  --line:#E5E1D2;
-  --calories:#E1604C;
-  --calories-soft:#F6DCD4;
-  --protein:#3F7D5C;
-  --protein-soft:#DCEAE0;
-  --carbs:#C98F2E;
-  --carbs-soft:#F3E6C9;
-  --fat:#7C6FA8;
-  --fat-soft:#E6E1F1;
-  --water:#3E8FA6;
-  --water-soft:#D9EBEF;
-  --danger:#C1443A;
-  --radius-lg:20px;
-  --radius-md:16px;
-  --radius-sm:10px;
-  --shadow:0 1px 2px rgba(42,40,34,0.05), 0 8px 20px rgba(42,40,34,0.06);
-  --font-display:'Fraunces', serif;
-  --font-body:'IBM Plex Sans Thai','IBM Plex Sans',sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#1A1917;
-    --surface:#242220;
-    --surface-alt:#2C2A26;
-    --ink:#ECE8DD;
-    --ink-soft:#A9A28E;
-    --ink-faint:#6E6959;
-    --line:#3A372F;
-    --calories-soft:#3C2723;
-    --protein-soft:#20302A;
-    --carbs-soft:#332A19;
-    --fat-soft:#2A2735;
-    --water-soft:#1E2E33;
-    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 24px rgba(0,0,0,0.35);
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#1A1917;
-  --surface:#242220;
-  --surface-alt:#2C2A26;
-  --ink:#ECE8DD;
-  --ink-soft:#A9A28E;
-  --ink-faint:#6E6959;
-  --line:#3A372F;
-  --calories-soft:#3C2723;
-  --protein-soft:#20302A;
-  --carbs-soft:#332A19;
-  --fat-soft:#2A2735;
-  --water-soft:#1E2E33;
-  --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 24px rgba(0,0,0,0.35);
-}
-
-*{box-sizing:border-box;}
-html,body{height:100%;}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
-  font-family:var(--font-body);
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-}
-button{font-family:inherit;}
-input,select{font-family:inherit;}
-h1,h2,h3,h4{margin:0;font-weight:600;}
-p{margin:0;}
-.num{font-family:var(--font-display);font-variant-numeric:tabular-nums;}
-::-webkit-scrollbar{width:0;height:0;}
-
-a{color:inherit;}
-button{cursor:pointer;border:none;background:none;color:inherit;}
-button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible{
-  outline:2px solid var(--protein);
-  outline-offset:2px;
-}
-@media (prefers-reduced-motion: reduce){
-  *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
-}
-
-/* ============ LAYOUT SHELL ============ */
-#app{
-  max-width:1180px;
-  margin:0 auto;
-  padding-bottom:96px;
-  min-height:100vh;
-}
-.app-grid{
-  display:grid;
-  grid-template-columns:1fr;
-}
-@media (min-width:900px){
-  #app{padding-bottom:32px;padding-left:96px;}
-  .app-grid{grid-template-columns:1fr;}
-}
-
-.view{display:none;padding:20px 18px 8px;animation:fadein .25s ease;}
-.view.active{display:block;}
-@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
-
-.topbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:22px 18px 4px;
-}
-.topbar .eyebrow{color:var(--ink-soft);font-size:14px;}
-.topbar h1{font-family:var(--font-display);font-size:22px;font-weight:500;}
-.icon-btn{
-  width:40px;height:40px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--surface);box-shadow:var(--shadow);
-  font-size:18px;
-}
-
-/* ============ CARDS ============ */
-.card{
-  background:var(--surface);
-  border-radius:var(--radius-lg);
-  box-shadow:var(--shadow);
-  padding:20px;
-}
-.card + .card{margin-top:14px;}
-.section-title{
-  font-size:15px;
-  color:var(--ink-soft);
-  margin:26px 2px 10px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.section-title button{color:var(--protein);font-size:14px;font-weight:600;}
-
-/* ============ CALORIE RING ============ */
-.ring-card{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:26px 20px 22px;
-  position:relative;
-}
-.ring-wrap{position:relative;width:210px;height:210px;margin:6px 0 8px;}
-.ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
-.ring-track{fill:none;stroke:var(--surface-alt);stroke-width:14;}
-.ring-fill{fill:none;stroke:var(--calories);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .5s ease;}
-.ring-center{
-  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-}
-.ring-center .kcal-num{font-size:44px;line-height:1;font-weight:600;}
-.ring-center .kcal-label{color:var(--ink-soft);font-size:13.5px;margin-top:6px;}
-.ring-sub{display:flex;gap:22px;margin-top:6px;}
-.ring-sub div{text-align:center;}
-.ring-sub .v{font-family:var(--font-display);font-size:18px;font-weight:600;}
-.ring-sub .l{font-size:12px;color:var(--ink-soft);}
-
-/* ============ MACRO BARS ============ */
-.macro-row{display:flex;flex-direction:column;gap:14px;}
-.macro-item .macro-top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;}
-.macro-item .macro-top .name{display:flex;align-items:center;gap:8px;font-weight:600;}
-.dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-.bar-track{height:9px;border-radius:6px;background:var(--surface-alt);overflow:hidden;}
-.bar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
-
-/* ============ MEALS ============ */
-.meal-card{margin-bottom:12px;}
-.meal-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
-.meal-head .left{display:flex;align-items:center;gap:10px;}
-.meal-head .emoji{font-size:22px;}
-.meal-head .name{font-weight:600;font-size:16px;}
-.meal-head .kcal{color:var(--ink-soft);font-size:13.5px;}
-.meal-add{
-  width:34px;height:34px;border-radius:50%;background:var(--protein-soft);color:var(--protein);
-  display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;
-}
-.meal-items{margin-top:12px;display:flex;flex-direction:column;gap:2px;}
-.food-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:9px 0;border-top:1px solid var(--line);
-}
-.food-row .fname{font-size:14.5px;font-weight:500;}
-.food-row .famt{font-size:12.5px;color:var(--ink-soft);}
-.food-row .fkcal{font-size:14px;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
-.food-row-btn{display:flex;align-items:center;gap:10px;flex:1;text-align:left;}
-.food-row-del{color:var(--ink-faint);font-size:16px;padding:4px 6px;}
-.empty-hint{color:var(--ink-faint);font-size:13.5px;padding:6px 0 2px;}
-
-/* ============ INSIGHT ============ */
-.insight{
-  background:var(--protein-soft);color:var(--protein);
-  border-radius:var(--radius-md);padding:14px 16px;font-size:14px;line-height:1.5;font-weight:500;
-}
-
-/* ============ WATER ============ */
-.water-card{display:flex;align-items:center;gap:16px;}
-.water-info{flex:1;}
-.water-title{font-weight:600;font-size:15px;margin-bottom:4px;}
-.water-amt{font-size:13px;color:var(--ink-soft);}
-.water-btns{display:flex;gap:8px;}
-.pill-btn{
-  background:var(--water-soft);color:var(--water);
-  padding:8px 13px;border-radius:999px;font-size:13px;font-weight:600;
-}
-
-/* ============ BOTTOM NAV ============ */
-.bottomnav{
-  position:fixed;left:0;right:0;bottom:0;
-  background:var(--surface);border-top:1px solid var(--line);
-  display:flex;align-items:center;justify-content:space-around;
-  padding:8px 6px calc(8px + env(safe-area-inset-bottom));
-  z-index:40;
-}
-.navbtn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--ink-faint);padding:4px 10px;border-radius:12px;}
-.navbtn .ic{font-size:20px;}
-.navbtn.active{color:var(--protein);}
-.navbtn.central{
-  background:var(--protein);color:#fff;width:52px;height:52px;border-radius:50%;
-  align-items:center;justify-content:center;margin-top:-26px;box-shadow:0 6px 16px rgba(63,125,92,.35);
-}
-.navbtn.central .ic{font-size:24px;}
-.navbtn.central span:last-child{display:none;}
-
-@media (min-width:900px){
-  .bottomnav{
-    left:0;right:auto;top:0;bottom:0;width:96px;flex-direction:column;justify-content:flex-start;
-    padding:28px 0;gap:26px;border-top:none;border-right:1px solid var(--line);
-  }
-  .navbtn{font-size:11px;}
-  .navbtn.central{margin-top:6px;}
-}
-
-/* ============ ADD FOOD VIEW ============ */
-.meal-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:16px;}
-.meal-tab{
-  padding:9px 16px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);
-  font-size:13.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap;
-}
-.meal-tab.sel{background:var(--protein);color:#fff;box-shadow:none;}
-
-.search-wrap{position:relative;margin-bottom:14px;}
-.search-wrap input{
-  width:100%;padding:14px 16px 14px 42px;border-radius:14px;border:1px solid var(--line);
-  background:var(--surface);color:var(--ink);font-size:15px;
-}
-.search-wrap input::placeholder{color:var(--ink-faint);}
-.search-ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-faint);}
-
-.chiprow{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
-.chip{
-  padding:7px 14px;border-radius:999px;background:var(--surface-alt);color:var(--ink-soft);
-  font-size:12.5px;font-weight:600;white-space:nowrap;
-}
-.chip.sel{background:var(--ink);color:var(--bg);}
-
-.favrow{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;}
-.favchip{
-  display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px;
-}
-.favchip .circle{
-  width:52px;height:52px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);
-  display:flex;align-items:center;justify-content:center;font-size:22px;
-}
-.favchip span{font-size:11px;color:var(--ink-soft);text-align:center;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-.foodcard{
-  background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow);
-  padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
-  text-align:left;width:100%;
-}
-.foodcard .fc-left{flex:1;min-width:0;}
-.foodcard .fc-name{font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px;}
-.foodcard .fc-meta{color:var(--ink-soft);font-size:12.5px;margin-top:3px;}
-.foodcard .fc-macros{color:var(--ink-faint);font-size:11.5px;margin-top:5px;}
-.fc-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.heart-btn{font-size:18px;color:var(--ink-faint);}
-.heart-btn.on{color:var(--calories);}
-.add-round{
-  width:34px;height:34px;border-radius:50%;background:var(--protein);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;
-}
-
-.recent-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line);}
-.recent-row:first-child{border-top:none;}
-.recent-left{display:flex;align-items:center;gap:12px;}
-.recent-left .re-name{font-weight:500;font-size:14.5px;}
-.recent-left .re-meta{font-size:12px;color:var(--ink-soft);}
-.again-btn{font-size:12.5px;font-weight:600;color:var(--protein);background:var(--protein-soft);padding:7px 12px;border-radius:999px;}
-
-.custom-add-card{
-  border:1.5px dashed var(--line);border-radius:var(--radius-md);padding:16px;
-  display:flex;align-items:center;justify-content:center;gap:8px;color:var(--ink-soft);font-weight:600;font-size:14px;margin:6px 0 4px;
-}
-
-/* ============ SHEETS / MODALS ============ */
-.overlay{
-  position:fixed;inset:0;background:rgba(20,18,14,.42);z-index:80;
-  display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;
-}
-.overlay.show{opacity:1;pointer-events:auto;}
-@media (min-width:640px){.overlay{align-items:center;}}
-.sheet{
-  background:var(--surface);width:100%;max-width:480px;border-radius:22px 22px 0 0;
-  padding:22px 20px calc(22px + env(safe-area-inset-bottom));
-  transform:translateY(24px);transition:transform .25s ease;max-height:88vh;overflow-y:auto;
-}
-.overlay.show .sheet{transform:translateY(0);}
-@media (min-width:640px){.sheet{border-radius:22px;max-height:80vh;}}
-.sheet-handle{width:36px;height:4px;background:var(--line);border-radius:4px;margin:0 auto 16px;}
-.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.sheet-head h3{font-family:var(--font-display);font-size:19px;font-weight:500;}
-.sheet-close{font-size:22px;color:var(--ink-faint);}
-
-.qty-stepper{display:flex;align-items:center;justify-content:center;gap:16px;margin:18px 0;}
-.qty-stepper button{
-  width:42px;height:42px;border-radius:50%;background:var(--surface-alt);font-size:18px;font-weight:600;
-  display:flex;align-items:center;justify-content:center;color:var(--ink);
-}
-.qty-input-wrap{display:flex;align-items:baseline;gap:6px;min-width:120px;justify-content:center;}
-.qty-input-wrap input{
-  width:90px;text-align:center;font-family:var(--font-display);font-size:34px;font-weight:600;
-  border:none;background:none;color:var(--ink);
-}
-.qty-input-wrap .unit{color:var(--ink-soft);font-size:15px;}
-
-.qty-result{
-  background:var(--surface-alt);border-radius:var(--radius-md);padding:16px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;
-}
-.qty-result .qr-item{text-align:center;}
-.qty-result .qr-v{font-family:var(--font-display);font-size:17px;font-weight:600;}
-.qty-result .qr-l{font-size:11px;color:var(--ink-soft);margin-top:2px;}
-
-.btn-primary{
-  width:100%;padding:15px;border-radius:14px;background:var(--protein);color:#fff;
-  font-weight:600;font-size:15.5px;
-}
-.btn-secondary{
-  width:100%;padding:15px;border-radius:14px;background:var(--surface-alt);color:var(--ink);
-  font-weight:600;font-size:15px;margin-top:10px;
-}
-.field{margin-bottom:14px;}
-.field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;}
-.field input,.field select{
-  width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
-  color:var(--ink);font-size:15px;
-}
-.field-row{display:flex;gap:10px;}
-.field-row .field{flex:1;}
-
-/* ============ ONBOARDING ============ */
-#onboarding{
-  position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;
-  display:flex;flex-direction:column;
-}
-.ob-step{display:none;flex:1;flex-direction:column;padding:40px 24px 30px;max-width:480px;margin:0 auto;width:100%;}
-.ob-step.active{display:flex;}
-.ob-eyebrow{color:var(--protein);font-weight:600;font-size:13px;margin-bottom:10px;}
-.ob-title{font-family:var(--font-display);font-size:26px;font-weight:500;line-height:1.3;margin-bottom:8px;}
-.ob-sub{color:var(--ink-soft);font-size:14.5px;margin-bottom:28px;line-height:1.5;}
-.ob-body{flex:1;}
-.optlist{display:flex;flex-direction:column;gap:10px;}
-.optbtn{
-  padding:15px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);
-  text-align:left;font-size:14.5px;font-weight:500;
-}
-.optbtn.sel{border-color:var(--protein);background:var(--protein-soft);color:var(--protein);font-weight:600;}
-.ob-nav{display:flex;gap:10px;margin-top:24px;}
-.ob-nav .btn-primary{flex:1;}
-.ob-back{
-  width:44px;height:44px;border-radius:12px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
-}
-.ob-progress{display:flex;gap:5px;padding:20px 24px 0;max-width:480px;margin:0 auto;width:100%;}
-.ob-progress div{height:4px;flex:1;border-radius:4px;background:var(--surface-alt);}
-.ob-progress div.done{background:var(--protein);}
-.ob-goal-preview{background:var(--surface-alt);border-radius:var(--radius-md);padding:18px;margin-top:6px;}
-.ob-goal-preview .row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
-.ob-goal-preview .row.total{font-weight:700;border-top:1px solid var(--line);margin-top:4px;padding-top:12px;}
-
-/* ============ PROGRESS VIEW ============ */
-.chart-wrap{margin-top:8px;}
-.weight-now{display:flex;justify-content:space-between;margin-bottom:16px;}
-.weight-now .wn-item{text-align:center;flex:1;}
-.weight-now .wn-v{font-family:var(--font-display);font-size:22px;font-weight:600;}
-.weight-now .wn-l{font-size:12px;color:var(--ink-soft);margin-top:3px;}
-.weight-log-row{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px;}
-.weight-log-row:first-child{border-top:none;}
-.weeksum-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px;}
-.weeksum-item{background:var(--surface-alt);border-radius:var(--radius-md);padding:14px;text-align:center;}
-.weeksum-item .wv{font-family:var(--font-display);font-size:19px;font-weight:600;}
-.weeksum-item .wl{font-size:12px;color:var(--ink-soft);margin-top:2px;}
-
-/* ============ SETTINGS ============ */
-.settings-row{
-  display:flex;align-items:center;justify-content:space-between;padding:14px 2px;border-top:1px solid var(--line);
-}
-.settings-row:first-child{border-top:none;}
-.settings-row .sr-label{font-size:14.5px;font-weight:500;}
-.settings-row .sr-sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
-.switch{width:46px;height:26px;border-radius:20px;background:var(--surface-alt);position:relative;flex-shrink:0;}
-.switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s ease;}
-.switch.on{background:var(--protein);}
-.switch.on::after{transform:translateX(20px);}
-.settings-input{width:76px;text-align:right;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;}
-
-.toast{
-  position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(10px);
-  background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;font-size:13.5px;font-weight:500;
-  opacity:0;pointer-events:none;transition:all .25s ease;z-index:120;white-space:nowrap;box-shadow:var(--shadow);
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-@media (min-width:900px){.toast{bottom:24px;}}
-
-.emptystate{text-align:center;padding:50px 20px;color:var(--ink-soft);}
-.emptystate .es-emoji{font-size:38px;margin-bottom:14px;}
-.emptystate .es-title{font-weight:600;color:var(--ink);margin-bottom:6px;font-size:15.5px;}
-.emptystate .es-sub{font-size:13.5px;margin-bottom:18px;}
-.emptystate button{display:inline-block;background:var(--protein);color:#fff;padding:11px 22px;border-radius:12px;font-weight:600;font-size:14px;}
-
-.date-scroll{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;margin-bottom:4px;}
-.date-pill{
-  display:flex;flex-direction:column;align-items:center;gap:2px;min-width:48px;padding:9px 4px;
-  border-radius:14px;color:var(--ink-soft);
-}
-.date-pill .dp-d{font-size:11px;}
-.date-pill .dp-n{font-family:var(--font-display);font-size:16px;font-weight:600;}
-.date-pill.sel{background:var(--ink);color:var(--bg);}
-
-.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+:root{--bg:#0b0c0d;--ink:#eceef0;--mut:#8a9096;--line:rgba(255,255,255,.07);--glow:rgba(255,255,255,.28);color-scheme:dark;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;color:var(--ink);font:400 15px/1.6 "IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(120% 60% at 20% -10%,#2a2e31 0%,transparent 60%),radial-gradient(90% 50% at 100% 30%,#1c1f21 0%,transparent 60%),var(--bg);background-attachment:fixed}
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:0 18px 120px}
+h1{font-size:22px;font-weight:600;margin:26px 0 2px;letter-spacing:-.01em;animation:up .7s both}
+.sub{color:var(--mut);margin:0 0 12px;font-size:14px;animation:up .7s .08s both}
+#st{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);padding:5px 12px;border-radius:99px;background:rgba(255,255,255,.05);border:1px solid var(--line);animation:up .7s .16s both}
+#st i{width:7px;height:7px;border-radius:50%;background:var(--mut)}
+#st.live i{background:#fff;box-shadow:0 0 8px #fff;animation:pulse 2s infinite}
+#st.off i{background:#9aa0a6}
+.card,.tile,.dock{background:linear-gradient(150deg,rgba(255,255,255,.07),rgba(255,255,255,.025));border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 34px rgba(0,0,0,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.dock{position:fixed;left:12px;right:12px;bottom:0;margin:0 auto 10px;max-width:736px;z-index:20;border-radius:24px;padding:8px;margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#tabs{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+#tabs button{flex:none;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:none;border:0;border-radius:16px;color:var(--mut);font:inherit;font-size:13px;padding:9px 14px;cursor:pointer;transition:all .3s}
+#tabs button.on{color:#0b0c0d;background:linear-gradient(145deg,#fff,#b9bec3);font-weight:500;box-shadow:0 0 18px var(--glow)}
+.sec h2{font-size:17px;font-weight:600;margin:22px 0 6px;line-height:1.4}
+.note{color:var(--mut);font-size:13px;margin:4px 0}
+a{color:#fff}
+.hero{position:relative;width:236px;height:236px;margin:30px auto 34px;display:grid;place-items:center}
+.hero svg{position:absolute;inset:0;width:100%;height:100%}
+.rt{fill:none;stroke:rgba(255,255,255,.08);stroke-width:12}
+.rp{fill:none;stroke:url(#g);stroke-width:12;stroke-linecap:round;stroke-dasharray:565.5;stroke-dashoffset:var(--off);transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;filter:drop-shadow(0 0 8px var(--glow));animation:draw 1.8s cubic-bezier(.2,.7,.2,1) both}
+.halo{position:absolute;inset:-14px;border-radius:50%;border:1px solid rgba(255,255,255,.1);animation:pulse2 3.5s ease-in-out infinite}
+.mid{text-align:center;position:relative}
+.mid b{display:block;font-size:56px;font-weight:300;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mid span{display:block;margin-top:8px;color:var(--mut);font-size:12px}
+.hms{display:flex;justify-content:center;gap:8px;margin:14px 0 0;min-height:56px}
+.hms span{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--mut);width:60px;padding:8px 0;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.hms b{font-size:22px;font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 10px}
+.tile{border-radius:20px;padding:14px 16px}
+.tile small{color:var(--mut);font-size:12px;display:block}
+.tile b{font-size:26px;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.card{border-radius:20px;margin:12px 0;overflow:hidden}
+.card.today{border-color:rgba(255,255,255,.5);box-shadow:0 0 24px var(--glow),inset 0 1px 0 rgba(255,255,255,.08)}
+button.hd,div.hd{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;padding:15px 16px}
+button.hd:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+.card .hd i{font-style:normal;flex:none;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--line);display:grid;place-items:center;font-weight:500;font-size:13px}
+.card .hd div{flex:1;min-width:0}
+.card .hd strong{display:block;font-weight:500;line-height:1.35}
+.card .hd small{color:var(--mut)}
+em{font-style:normal;color:var(--ink);font-weight:500;font-size:13px;white-space:nowrap;background:rgba(255,255,255,.08);padding:2px 10px;border-radius:99px}
+.bar{height:3px;background:rgba(255,255,255,.07);margin:0 16px 14px;border-radius:3px;overflow:hidden}
+.bar u{display:block;height:100%;width:0;background:linear-gradient(90deg,#8d949a,#fff);box-shadow:0 0 8px var(--glow);border-radius:3px;transition:width 1.1s cubic-bezier(.2,.7,.2,1) .25s}
+.in .bar u,.static .bar u{width:var(--w)}
+.more{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.more>div{overflow:hidden;min-height:0}
+.open>.more,.open .more{grid-template-rows:1fr}
+.card .more>div{padding:0 16px}
+.card.open .more>div{padding-bottom:16px}
+dl{margin:0;display:grid;grid-template-columns:84px 1fr;gap:8px 12px;font-size:14px}
+dt{color:var(--mut)}dd{margin:0}
+.go{display:inline-block;margin-top:12px;font-size:14px;cursor:pointer}
+.tl{list-style:none;margin:20px 0 0;padding:0;position:relative}
+.tl::before{content:"";position:absolute;left:55px;top:6px;bottom:6px;width:1px;background:linear-gradient(#fff,rgba(255,255,255,.06));opacity:.5;transform-origin:top;animation:grow 1.4s ease both}
+.tl li{display:flex;padding:6px 0;position:relative}
+.tl time{flex:none;width:44px;text-align:right;color:var(--mut);font-size:13px;padding-top:10px;font-variant-numeric:tabular-nums}
+.tl li::before{content:"";position:absolute;left:51px;top:17px;width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 10px var(--glow)}
+.ev{flex:1;margin-left:34px;min-width:0}
+.ev button.hd{padding:6px 0;align-items:flex-start;justify-content:space-between}
+.ev strong{font-weight:500;line-height:1.4}
+.ev>small{display:block;color:var(--mut);font-size:12px;margin-top:-2px}
+.ev p{margin:6px 0;font-size:14px}
+.ev .more>div{padding:0}
+.total{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 8px;padding:16px 18px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.total b{font-size:26px;font-weight:300;font-variant-numeric:tabular-nums}
+.cmp{margin:8px 0;border-radius:16px}.cmp .hd{padding:11px 14px;gap:10px}.cmp .hd strong{font-size:14.5px}.cmp .hd small{font-size:12px}.cmp .hd i{width:28px;height:28px;font-size:12px}h3.sect{font-size:13px;font-weight:600;margin:22px 0 4px;letter-spacing:.02em}s{flex:none;width:7px;height:7px;margin-right:4px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(45deg);transition:transform .3s}.open s{transform:rotate(-135deg)}
+.tw{overflow-x:auto;margin:16px -18px 0;padding:0 18px}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th{text-align:left;color:var(--mut);font-weight:500;font-size:12px;padding:8px 14px 8px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 14px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;min-width:70px;max-width:300px}
+td:first-child,th:first-child{position:sticky;left:0;background:#0f1011;min-width:44px;font-weight:500}
+tbody tr{animation:fade .5s both;animation-delay:calc(var(--i,0)*35ms)}
+tr.sect td{padding-top:22px;color:#fff;font-weight:600;border-bottom-color:rgba(255,255,255,.4)}
+.ck{font-weight:600}.ck.off{color:#3a3e42}
+.rise{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease;transition-delay:calc(var(--i,0)*50ms)}
+.rise.in{opacity:1;transform:none}
+.static *{transition:none!important;animation:none!important}
+.static .rise{opacity:1;transform:none}
+.hh{display:flex;align-items:center;gap:12px;padding:16px}.hh i{font-style:normal;flex:none;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--line);display:grid;place-items:center;font-size:14px}.hh div{flex:1;min-width:0}.hh strong{display:block;font-weight:500;line-height:1.35}.hh small{color:var(--mut);font-size:12.5px}
+.pay{margin:0 16px 12px;font-size:13px;display:flex;gap:8px;align-items:flex-start}.pay i{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;border:1.5px solid var(--mut)}.pay.paid i{background:#fff;border-color:#fff;box-shadow:0 0 8px var(--glow)}.pay.due{color:#fff}
+.grp .gh{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:11px 16px!important;font-size:14px;color:var(--mut)}.grp.open .more>div{padding-bottom:14px}
+.fl{padding:16px}.fh{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mut)}.route{display:flex;align-items:center;gap:10px;margin:14px 0 6px}.route>div:not(.path){flex:none;max-width:38%}.route b{display:block;font-size:30px;font-weight:300;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}.route small{color:var(--mut);font-size:12px;display:block}.route>div:last-child{text-align:right}
+.path{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.1),#fff,rgba(255,255,255,.1));position:relative;min-width:30px}.path u{position:absolute;top:-3px;left:0;width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 8px #fff;animation:fly 3s ease-in-out infinite}
+@keyframes fly{0%{left:0;opacity:0}15%,85%{opacity:1}100%{left:calc(100% - 7px);opacity:0}}
+.lst{padding:0}.row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:12px 16px;font-size:14px}.row small{display:block;color:var(--mut);font-size:12px}.row b{font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}.row.tot{background:rgba(255,255,255,.05)}.row.tot b{font-size:16px}.row b.dd{white-space:normal;text-align:right;max-width:46%;font-size:13px}.lst .row+.row,.lst .it+.it{border-top:1px solid var(--line)}
+.lst .it .hd{padding:12px 16px}.it.open .more>div{padding-bottom:12px}.box{flex:none;width:18px;height:18px;border-radius:6px;border:1.5px solid var(--mut)}.box.on{background:#fff;border-color:#fff;box-shadow:0 0 10px var(--glow)}
+.bar.big{height:5px;margin:18px 0 8px}
+.chips{display:block}.chips span{display:inline-block;margin:5px 6px 0 0;padding:1px 9px;border:1px solid var(--line);border-radius:99px;font-size:11.5px;color:var(--ink);background:rgba(255,255,255,.05)}
+#top{padding-top:30px}
+.eb{font-size:11px;letter-spacing:.24em;color:var(--mut);animation:up .7s both}
+#top h1{font-size:40px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:6px 0 8px;background:linear-gradient(180deg,#fff 30%,#9aa0a6);-webkit-background-clip:text;background-clip:text;color:transparent;animation:up .7s .08s both}
+.dt{display:flex;align-items:center;gap:12px;flex-wrap:wrap;animation:up .7s .16s both}
+.dt b{font-size:20px;font-weight:300;letter-spacing:.01em}
+.pill{font-size:12.5px;padding:3px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);box-shadow:0 0 14px rgba(255,255,255,.08)}
+.ppl{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 14px;animation:up .7s .24s both}
+.pp{display:inline-flex;align-items:center;gap:8px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:13px}
+.pp i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600;background:linear-gradient(145deg,#fff,#aeb3b8);color:#0b0c0d}
+@keyframes up{from{opacity:0;transform:translateY(10px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes grow{from{transform:scaleY(0)}}
+.rb{fill:none;stroke:rgba(255,255,255,.07);stroke-width:2.5}.rs{fill:none;stroke:rgba(255,255,255,.6);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:477.5;transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;animation:sec 60s linear infinite;animation-delay:var(--sd,0s)}.sdot{fill:#fff;transform-origin:118px 118px;animation:spin 60s linear infinite;animation-delay:var(--sd,0s);filter:drop-shadow(0 0 5px #fff)}.hdot{fill:#fff;filter:drop-shadow(0 0 8px #fff);animation:dotp 2s ease-in-out infinite}.hg{animation:fade .6s 1.6s both}
+@keyframes sec{from{stroke-dashoffset:477.5}to{stroke-dashoffset:0}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes dotp{50%{opacity:.5}}
+@keyframes draw{from{stroke-dashoffset:565.5}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,255,255,.12),0 0 8px #fff}}
+@keyframes pulse2{50%{transform:scale(1.05);opacity:.4}}
+@keyframes drift{to{transform:translate(-24px,18px) scale(1.06)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rise{opacity:1;transform:none}.bar u{width:var(--w)}}
 </style>
 </head>
 <body>
-
-<!-- ============ ONBOARDING ============ -->
-<div id="onboarding">
-  <div class="ob-progress" id="obProgress"></div>
-
-  <div class="ob-step active" data-step="0">
-    <div class="ob-body" style="justify-content:center;display:flex;flex-direction:column;">
-      <div class="ob-eyebrow">จานนี้</div>
-      <div class="ob-title">มาเริ่มวางแผนการกินกัน</div>
-      <div class="ob-sub">กินได้ทุกอย่าง แค่รู้ว่ากินเท่าไหร่ — เลือกวัตถุดิบ ใส่ปริมาณ แล้วเราคำนวณให้ทั้งหมด</div>
-    </div>
-    <div class="ob-nav"><button class="btn-primary" onclick="obNext()">เริ่มกันเลย</button></div>
-  </div>
-
-  <div class="ob-step" data-step="1">
-    <div class="ob-title">เพศของคุณ</div>
-    <div class="ob-sub">ใช้สำหรับคำนวณพลังงานที่ร่างกายต้องการ</div>
-    <div class="ob-body"><div class="optlist" id="obGender">
-      <button class="optbtn" data-v="male" onclick="obPick('gender','male',this)">ชาย</button>
-      <button class="optbtn" data-v="female" onclick="obPick('gender','female',this)">หญิง</button>
-    </div></div>
-    <div class="ob-nav"><button class="ob-back" onclick="obPrev()">←</button><button class="btn-primary" onclick="obNext()">ถัดไป</button></div>
-  </div>
-
-  <div class="ob-step" data-step="2">
-    <div class="ob-title">อายุ ส่วนสูง และน้ำหนัก</div>
-    <div class="ob-sub">ข้อมูลพื้นฐานของคุณ</div>
-    <div class="ob-body">
-      <div class="field-row">
-        <div class="field"><label for="obAge">อายุ (ปี)</label><input id="obAge" type="number" inputmode="numeric" placeholder="28"></div>
-        <div class="field"><label for="obHeight">ส่วนสูง (cm)</label><input id="obHeight" type="number" inputmode="numeric" placeholder="165"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label for="obWeight">น้ำหนักปัจจุบัน (kg)</label><input id="obWeight" type="number" inputmode="decimal" placeholder="67"></div>
-        <div class="field"><label for="obWeightGoal">น้ำหนักเป้าหมาย (kg)</label><input id="obWeightGoal" type="number" inputmode="decimal" placeholder="60"></div>
-      </div>
-    </div>
-    <div class="ob-nav"><button class="ob-back" onclick="obPrev()">←</button><button class="btn-primary" onclick="obNext()">ถัดไป</button></div>
-  </div>
-
-  <div class="ob-step" data-step="3">
-    <div class="ob-title">ระดับกิจกรรมในแต่ละวัน</div>
-    <div class="ob-sub">เลือกข้อที่ใกล้เคียงชีวิตประจำวันของคุณที่สุด</div>
-    <div class="ob-body"><div class="optlist" id="obActivity">
-      <button class="optbtn" data-v="1.2" onclick="obPick('activity','1.2',this)">ไม่ค่อยออกกำลังกาย</button>
-      <button class="optbtn" data-v="1.375" onclick="obPick('activity','1.375',this)">ออกกำลังกายเบา ๆ 1–2 วัน/สัปดาห์</button>
-      <button class="optbtn" data-v="1.55" onclick="obPick('activity','1.55',this)">ออกกำลังกาย 3–4 วัน/สัปดาห์</button>
-      <button class="optbtn" data-v="1.725" onclick="obPick('activity','1.725',this)">ออกกำลังกาย 5–6 วัน/สัปดาห์</button>
-      <button class="optbtn" data-v="1.9" onclick="obPick('activity','1.9',this)">ออกกำลังกายหนักเกือบทุกวัน</button>
-    </div></div>
-    <div class="ob-nav"><button class="ob-back" onclick="obPrev()">←</button><button class="btn-primary" onclick="obNext()">ถัดไป</button></div>
-  </div>
-
-  <div class="ob-step" data-step="4">
-    <div class="ob-title">เป้าหมายของคุณ</div>
-    <div class="ob-sub">คุณอยากให้น้ำหนักเปลี่ยนแปลงอย่างไร</div>
-    <div class="ob-body"><div class="optlist" id="obGoal">
-      <button class="optbtn" data-v="lose" onclick="obPick('goal','lose',this)">ลดน้ำหนัก</button>
-      <button class="optbtn" data-v="maintain" onclick="obPick('goal','maintain',this)">รักษาน้ำหนัก</button>
-      <button class="optbtn" data-v="gain" onclick="obPick('goal','gain',this)">เพิ่มน้ำหนัก</button>
-    </div></div>
-    <div class="ob-nav"><button class="ob-back" onclick="obPrev()">←</button><button class="btn-primary" onclick="obNext()">ถัดไป</button></div>
-  </div>
-
-  <div class="ob-step" data-step="5">
-    <div class="ob-title">เป้าหมายของคุณ</div>
-    <div class="ob-sub" id="obPreviewSub">นี่คือค่าประมาณ — ปรับแก้ได้ทีหลังในหน้าตั้งค่า</div>
-    <div class="ob-body">
-      <div class="ob-goal-preview" id="obGoalPreview"></div>
-    </div>
-    <div class="ob-nav"><button class="ob-back" onclick="obPrev()">←</button><button class="btn-primary" onclick="finishOnboarding()">เริ่มใช้งาน</button></div>
-  </div>
+<div class="wrap">
+<header id="top"></header>
+<div id="st"><i></i><span>กำลังโหลด…</span></div>
+<main id="main"></main>
 </div>
-
-<!-- ============ MAIN APP ============ -->
-<div id="app" style="display:none;">
-
-  <nav class="bottomnav">
-    <button class="navbtn" data-view="home" onclick="showView('home')"><span class="ic">🏠</span><span>วันนี้</span></button>
-    <button class="navbtn" data-view="foods" onclick="showView('foods')"><span class="ic">🍽</span><span>อาหาร</span></button>
-    <button class="navbtn central" onclick="openAddFood()"><span class="ic">➕</span><span>เพิ่ม</span></button>
-    <button class="navbtn" data-view="progress" onclick="showView('progress')"><span class="ic">📊</span><span>Progress</span></button>
-    <button class="navbtn" data-view="settings" onclick="showView('settings')"><span class="ic">⚙️</span><span>ตั้งค่า</span></button>
-  </nav>
-
-  <!-- HOME -->
-  <section class="view active" id="view-home">
-    <div class="topbar">
-      <div><div class="eyebrow" id="homeGreeting">วันนี้คุณกินไปแล้วเท่าไหร่?</div><h1 id="homeDate">—</h1></div>
-      <button class="icon-btn" onclick="showView('settings')">⚙️</button>
-    </div>
-
-    <div class="card ring-card">
-      <div class="ring-wrap">
-        <svg viewBox="0 0 200 200">
-          <circle class="ring-track" cx="100" cy="100" r="86"></circle>
-          <circle class="ring-fill" id="ringFill" cx="100" cy="100" r="86" stroke-dasharray="540" stroke-dashoffset="540"></circle>
-        </svg>
-        <div class="ring-center">
-          <div class="kcal-num num" id="kcalEaten">0</div>
-          <div class="kcal-label">กินไปแล้ว (kcal)</div>
-        </div>
-      </div>
-      <div class="ring-sub">
-        <div><div class="v num" id="kcalGoalDisp">0</div><div class="l">เป้าหมาย</div></div>
-        <div><div class="v num" id="kcalLeftDisp">0</div><div class="l">เหลืออีก</div></div>
-      </div>
-      <div id="burnedNote" style="display:none;color:var(--ink-faint);font-size:12px;margin-top:8px;">* รวมแคลอรีที่เผาผลาญจากการออกกำลังกายแล้ว</div>
-    </div>
-
-    <div class="card" style="margin-top:14px;">
-      <div class="macro-row">
-        <div class="macro-item">
-          <div class="macro-top"><span class="name"><span class="dot" style="background:var(--protein)"></span>โปรตีน</span><span id="macroProteinTxt">0 / 0 g</span></div>
-          <div class="bar-track"><div class="bar-fill" id="macroProteinBar" style="background:var(--protein);width:0%;"></div></div>
-        </div>
-        <div class="macro-item">
-          <div class="macro-top"><span class="name"><span class="dot" style="background:var(--carbs)"></span>คาร์โบไฮเดรต</span><span id="macroCarbsTxt">0 / 0 g</span></div>
-          <div class="bar-track"><div class="bar-fill" id="macroCarbsBar" style="background:var(--carbs);width:0%;"></div></div>
-        </div>
-        <div class="macro-item">
-          <div class="macro-top"><span class="name"><span class="dot" style="background:var(--fat)"></span>ไขมัน</span><span id="macroFatTxt">0 / 0 g</span></div>
-          <div class="bar-track"><div class="bar-fill" id="macroFatBar" style="background:var(--fat);width:0%;"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px;" id="insightCard"></div>
-
-    <div class="card water-card" style="margin-top:14px;">
-      <div style="font-size:22px;">💧</div>
-      <div class="water-info">
-        <div class="water-title">น้ำดื่ม</div>
-        <div class="water-amt"><span id="waterCur">0</span> / <span id="waterGoal">2500</span> ml</div>
-      </div>
-      <div class="water-btns">
-        <button class="pill-btn" onclick="addWater(250)">+250</button>
-        <button class="pill-btn" onclick="addWater(500)">+500</button>
-      </div>
-    </div>
-
-    <div class="section-title">ออกกำลังกายวันนี้<button onclick="openExerciseSheet()">+ เพิ่ม</button></div>
-    <div class="card" id="exerciseCard"></div>
-
-    <div class="section-title">มื้ออาหารวันนี้</div>
-    <div id="mealsContainer"></div>
-  </section>
-
-  <!-- ADD FOOD -->
-  <section class="view" id="view-add">
-    <div class="topbar" style="padding-top:22px;">
-      <h1 id="addFoodTitle">คุณกำลังเพิ่มอาหารให้มื้อกลางวัน</h1>
-    </div>
-    <div class="meal-tabs" id="mealTabs"></div>
-
-    <div class="search-wrap">
-      <span class="search-ic">🔎</span>
-      <input id="foodSearch" type="text" placeholder="ค้นหาอาหารหรือวัตถุดิบ…" oninput="renderFoodList()">
-    </div>
-    <div class="chiprow" id="filterChips"></div>
-
-    <div id="favSection">
-      <div class="section-title">อาหารที่กินบ่อย</div>
-      <div class="favrow" id="favRow"></div>
-    </div>
-
-    <div id="recentSection">
-      <div class="section-title">กินล่าสุด</div>
-      <div class="card" style="padding:6px 16px;"><div id="recentList"></div></div>
-    </div>
-
-    <div class="section-title">ผลการค้นหา</div>
-    <button class="custom-add-card" onclick="openCustomFood()">✏️ สร้างอาหารของฉัน</button>
-    <div id="foodList"></div>
-  </section>
-
-  <!-- FOODS BROWSE -->
-  <section class="view" id="view-foods">
-    <div class="topbar" style="padding-top:22px;"><h1>คลังอาหาร</h1></div>
-    <div class="search-wrap">
-      <span class="search-ic">🔎</span>
-      <input id="foodsBrowseSearch" type="text" placeholder="ค้นหาอาหารหรือวัตถุดิบ…" oninput="renderFoodsBrowse()">
-    </div>
-    <div class="chiprow" id="filterChipsBrowse"></div>
-    <button class="custom-add-card" onclick="openCustomFood()">✏️ สร้างอาหารของฉัน</button>
-    <div id="foodsBrowseList"></div>
-  </section>
-
-  <!-- PROGRESS -->
-  <section class="view" id="view-progress">
-    <div class="topbar" style="padding-top:22px;"><h1>Progress</h1></div>
-
-    <div class="section-title">น้ำหนัก</div>
-    <div class="card">
-      <div class="weight-now">
-        <div class="wn-item"><div class="wn-v num" id="pgWeightCur">—</div><div class="wn-l">ปัจจุบัน</div></div>
-        <div class="wn-item"><div class="wn-v num" id="pgWeightGoal">—</div><div class="wn-l">เป้าหมาย</div></div>
-        <div class="wn-item"><div class="wn-v num" id="pgWeightLeft">—</div><div class="wn-l">เหลือ</div></div>
-      </div>
-      <div class="chart-wrap"><svg id="weightChart" viewBox="0 0 320 120" style="width:100%;height:120px;"></svg></div>
-      <div class="field-row" style="margin-top:14px;">
-        <div class="field" style="margin-bottom:0;"><input id="newWeightInput" type="number" inputmode="decimal" placeholder="บันทึกน้ำหนักวันนี้ (kg)"></div>
-        <button class="btn-primary" style="width:auto;padding:12px 18px;flex-shrink:0;" onclick="logWeight()">บันทึก</button>
-      </div>
-      <div id="weightLog" style="margin-top:10px;"></div>
-    </div>
-
-    <div class="section-title">สรุปรายสัปดาห์</div>
-    <div class="card">
-      <div class="weeksum-grid" id="weekSumGrid"></div>
-    </div>
-  </section>
-
-  <!-- SETTINGS -->
-  <section class="view" id="view-settings">
-    <div class="topbar" style="padding-top:22px;"><h1>ตั้งค่า</h1></div>
-
-    <div class="section-title">ข้อมูลส่วนตัว</div>
-    <div class="card">
-      <div class="field"><label>อายุ (ปี)</label><input id="setAge" type="number"></div>
-      <div class="field-row">
-        <div class="field"><label>ส่วนสูง (cm)</label><input id="setHeight" type="number"></div>
-        <div class="field"><label>น้ำหนักเป้าหมาย (kg)</label><input id="setWeightGoal" type="number"></div>
-      </div>
-      <div class="field"><label>ระดับกิจกรรม</label>
-        <select id="setActivity">
-          <option value="1.2">ไม่ค่อยออกกำลังกาย</option>
-          <option value="1.375">ออกกำลังกายเบา ๆ 1–2 วัน/สัปดาห์</option>
-          <option value="1.55">ออกกำลังกาย 3–4 วัน/สัปดาห์</option>
-          <option value="1.725">ออกกำลังกาย 5–6 วัน/สัปดาห์</option>
-          <option value="1.9">ออกกำลังกายหนักเกือบทุกวัน</option>
-        </select>
-      </div>
-      <button class="btn-secondary" onclick="saveProfileSettings()">บันทึกข้อมูลส่วนตัว</button>
-    </div>
-
-    <div class="section-title">เป้าหมายต่อวัน <button onclick="recalcGoalsFromSettings()">คำนวณใหม่</button></div>
-    <div class="card">
-      <div class="field"><label>🔥 Calories (kcal)</label><input id="setCalGoal" type="number"></div>
-      <div class="field-row">
-        <div class="field"><label>💪 Protein (g)</label><input id="setProteinGoal" type="number"></div>
-        <div class="field"><label>🍚 Carbs (g)</label><input id="setCarbsGoal" type="number"></div>
-      </div>
-      <div class="field"><label>🥑 Fat (g)</label><input id="setFatGoal" type="number"></div>
-      <button class="btn-secondary" onclick="saveGoalSettings()">บันทึกเป้าหมาย</button>
-    </div>
-
-    <div class="section-title">การตั้งค่า</div>
-    <div class="card">
-      <div class="settings-row">
-        <div><div class="sr-label">Dark mode</div></div>
-        <div class="switch" id="darkSwitch" onclick="toggleDark()"></div>
-      </div>
-      <div class="settings-row">
-        <div><div class="sr-label">เป้าหมายน้ำ (ml)</div></div>
-        <input class="settings-input" id="setWaterGoal" type="number" onchange="saveWaterGoal()">
-      </div>
-    </div>
-
-    <div class="section-title">ข้อมูล</div>
-    <div class="card">
-      <button class="btn-secondary" style="color:var(--danger);" onclick="confirmReset()">รีเซ็ตข้อมูลทั้งหมด</button>
-    </div>
-  </section>
-
-</div>
-
-<!-- ============ QUANTITY SHEET ============ -->
-<div class="overlay" id="qtyOverlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h3 id="qtyFoodName">อาหาร</h3><button class="sheet-close" onclick="closeSheet('qtyOverlay')">✕</button></div>
-    <div style="text-align:center;color:var(--ink-soft);font-size:13px;" id="qtyFoodBase">ต่อ 100 g</div>
-    <div class="qty-stepper">
-      <button onclick="qtyStep(-1)">−</button>
-      <div class="qty-input-wrap"><input id="qtyAmount" type="number" inputmode="decimal" value="100" oninput="qtyRecalc()"><span class="unit" id="qtyUnitLabel">g</span></div>
-      <button onclick="qtyStep(1)">+</button>
-    </div>
-    <div class="qty-result">
-      <div class="qr-item"><div class="qr-v num" id="qrKcal">0</div><div class="qr-l">kcal</div></div>
-      <div class="qr-item"><div class="qr-v num" id="qrProtein">0</div><div class="qr-l">Protein</div></div>
-      <div class="qr-item"><div class="qr-v num" id="qrCarbs">0</div><div class="qr-l">Carbs</div></div>
-      <div class="qr-item"><div class="qr-v num" id="qrFat">0</div><div class="qr-l">Fat</div></div>
-    </div>
-    <button class="btn-primary" onclick="confirmAddFood()">เพิ่มลงในมื้ออาหาร</button>
-  </div>
-</div>
-
-<!-- ============ CUSTOM FOOD SHEET ============ -->
-<div class="overlay" id="customOverlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h3>สร้างอาหารของฉัน</h3><button class="sheet-close" onclick="closeSheet('customOverlay')">✕</button></div>
-    <div class="field"><label>ชื่ออาหาร</label><input id="cfName" type="text" placeholder="เช่น โยเกิร์ตยี่ห้อที่กินประจำ"></div>
-    <div class="field-row">
-      <div class="field"><label>หน่วยนับ</label>
-        <select id="cfUnit"><option value="g">ต่อ 100 g</option><option value="ml">ต่อ 100 ml</option><option value="piece">ต่อ 1 serving</option></select>
-      </div>
-      <div class="field"><label>Calories</label><input id="cfKcal" type="number"></div>
-    </div>
-    <div class="field-row">
-      <div class="field"><label>Protein (g)</label><input id="cfProtein" type="number"></div>
-      <div class="field"><label>Carbs (g)</label><input id="cfCarbs" type="number"></div>
-    </div>
-    <div class="field-row">
-      <div class="field"><label>Fat (g)</label><input id="cfFat" type="number"></div>
-      <div class="field"><label>Fiber (g)</label><input id="cfFiber" type="number"></div>
-    </div>
-    <button class="btn-primary" onclick="saveCustomFood()">บันทึกอาหาร</button>
-  </div>
-</div>
-
-<!-- ============ MEAL DETAIL SHEET ============ -->
-<div class="overlay" id="mealDetailOverlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h3 id="mdMealName">มื้อกลางวัน</h3><button class="sheet-close" onclick="closeSheet('mealDetailOverlay')">✕</button></div>
-    <div id="mdItems"></div>
-    <div class="qty-result" id="mdTotals" style="margin-top:16px;"></div>
-  </div>
-</div>
-
-<!-- ============ EXERCISE SHEET ============ -->
-<div class="overlay" id="exerciseOverlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h3>บันทึกการออกกำลังกาย</h3><button class="sheet-close" onclick="closeSheet('exerciseOverlay')">✕</button></div>
-    <div class="chiprow" id="exerciseChips"></div>
-    <div class="qty-stepper">
-      <button onclick="exStepMinutes(-5)">−</button>
-      <div class="qty-input-wrap"><input id="exMinutes" type="number" inputmode="numeric" value="30" oninput="exRecalc()"><span class="unit">นาที</span></div>
-      <button onclick="exStepMinutes(5)">+</button>
-    </div>
-    <div class="qty-result" style="grid-template-columns:1fr;">
-      <div class="qr-item"><div class="qr-v num" id="exKcal">0</div><div class="qr-l">kcal ที่เผาผลาญ (ค่าประมาณ)</div></div>
-    </div>
-    <button class="btn-primary" onclick="confirmAddExercise()">บันทึก</button>
-  </div>
-</div>
-
-<!-- ============ MENU SUGGESTION SHEET ============ -->
-<div class="overlay" id="suggestOverlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h3 id="suggestMealName">แนะนำเมนู</h3><button class="sheet-close" onclick="closeSheet('suggestOverlay')">✕</button></div>
-    <div id="suggestBody"></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
+<div class="dock"><div id="tabs"></div></div>
 <script>
-/* ================= FOOD DATABASE ================= */
-const FOOD_DB = [
- {id:'chicken_breast',name:'อกไก่',en:'chicken breast chicken',unit:'g',unitLabel:'g',base:100,kcal:165,p:31,c:0,f:3.6,fiber:0,tags:['meat','high_protein','low_carb','low_fat']},
- {id:'chicken_thigh',name:'สะโพกไก่',en:'chicken thigh chicken',unit:'g',unitLabel:'g',base:100,kcal:209,p:26,c:0,f:11,fiber:0,tags:['meat','high_protein']},
- {id:'chicken_ground',name:'ไก่บด',en:'ground chicken chicken',unit:'g',unitLabel:'g',base:100,kcal:143,p:17.4,c:0,f:8,fiber:0,tags:['meat','high_protein']},
- {id:'chicken_wing',name:'ปีกไก่',en:'chicken wing chicken',unit:'g',unitLabel:'g',base:100,kcal:203,p:30.5,c:0,f:8.1,fiber:0,tags:['meat','high_protein']},
- {id:'chicken_grilled',name:'ไก่ย่าง',en:'grilled chicken chicken',unit:'g',unitLabel:'g',base:100,kcal:165,p:31,c:0,f:3.6,fiber:0,tags:['meat','high_protein','low_carb']},
- {id:'egg',name:'ไข่ไก่',en:'egg chicken egg',unit:'piece',unitLabel:'ฟอง',base:1,kcal:78,p:6.3,c:0.6,f:5.3,fiber:0,tags:['egg','high_protein']},
- {id:'egg_white',name:'ไข่ขาว',en:'egg white',unit:'ml',unitLabel:'ml',base:100,kcal:52,p:10.9,c:0.7,f:0.2,fiber:0,tags:['egg','high_protein','low_fat','low_cal']},
- {id:'salmon',name:'แซลมอน',en:'salmon fish',unit:'g',unitLabel:'g',base:100,kcal:208,p:20,c:0,f:13,fiber:0,tags:['meat','high_protein']},
- {id:'tuna',name:'ปลาทูน่า',en:'tuna fish',unit:'g',unitLabel:'g',base:100,kcal:116,p:25.5,c:0,f:1,fiber:0,tags:['meat','high_protein','low_fat','low_carb']},
- {id:'tilapia',name:'ปลานิล',en:'tilapia fish',unit:'g',unitLabel:'g',base:100,kcal:96,p:20.1,c:0,f:1.7,fiber:0,tags:['meat','high_protein','low_fat','low_carb']},
- {id:'beef',name:'เนื้อวัว',en:'beef meat',unit:'g',unitLabel:'g',base:100,kcal:250,p:26,c:0,f:15,fiber:0,tags:['meat','high_protein']},
- {id:'pork',name:'หมู',en:'pork meat',unit:'g',unitLabel:'g',base:100,kcal:143,p:21,c:0,f:6,fiber:0,tags:['meat','high_protein']},
- {id:'tofu',name:'เต้าหู้',en:'tofu',unit:'g',unitLabel:'g',base:100,kcal:76,p:8,c:1.9,f:4.8,fiber:0.3,tags:['vegetable','high_protein','low_cal']},
- {id:'rice_white',name:'ข้าวสวย',en:'rice white rice',unit:'g',unitLabel:'g',base:100,kcal:130,p:2.7,c:28,f:0.3,fiber:0.4,tags:['low_fat']},
- {id:'rice_brown',name:'ข้าวกล้อง',en:'brown rice rice',unit:'g',unitLabel:'g',base:100,kcal:111,p:2.6,c:23,f:0.9,fiber:1.8,tags:['low_fat']},
- {id:'rice_berry',name:'ข้าวไรซ์เบอร์รี่',en:'riceberry rice',unit:'g',unitLabel:'g',base:100,kcal:123,p:2.7,c:26,f:0.9,fiber:1.9,tags:['low_fat']},
- {id:'sweet_potato',name:'มันหวาน',en:'sweet potato',unit:'g',unitLabel:'g',base:100,kcal:86,p:1.6,c:20,f:0.1,fiber:3,tags:['vegetable','low_fat','low_cal']},
- {id:'oats',name:'ข้าวโอ๊ต',en:'oats oatmeal',unit:'g',unitLabel:'g',base:100,kcal:389,p:16.9,c:66,f:6.9,fiber:10.6,tags:['low_fat']},
- {id:'banana',name:'กล้วย',en:'banana',unit:'piece',unitLabel:'ลูก',base:1,kcal:105,p:1.3,c:27,f:0.4,fiber:3.1,tags:['fruit']},
- {id:'apple',name:'แอปเปิล',en:'apple',unit:'piece',unitLabel:'ลูก',base:1,kcal:95,p:0.5,c:25,f:0.3,fiber:4.4,tags:['fruit','low_cal']},
- {id:'avocado',name:'อะโวคาโด',en:'avocado',unit:'g',unitLabel:'g',base:100,kcal:160,p:2,c:8.5,f:14.7,fiber:6.7,tags:['fruit']},
- {id:'broccoli',name:'บรอกโคลี',en:'broccoli',unit:'g',unitLabel:'g',base:100,kcal:34,p:2.8,c:7,f:0.4,fiber:2.6,tags:['vegetable','low_cal']},
- {id:'carrot',name:'แครอท',en:'carrot',unit:'g',unitLabel:'g',base:100,kcal:41,p:0.9,c:10,f:0.2,fiber:2.8,tags:['vegetable','low_cal']},
- {id:'cucumber',name:'แตงกวา',en:'cucumber',unit:'g',unitLabel:'g',base:100,kcal:15,p:0.7,c:3.6,f:0.1,fiber:0.5,tags:['vegetable','low_cal']},
- {id:'lettuce',name:'ผักกาดหอม',en:'lettuce',unit:'g',unitLabel:'g',base:100,kcal:15,p:1.4,c:2.9,f:0.2,fiber:1.3,tags:['vegetable','low_cal']},
- {id:'tomato',name:'มะเขือเทศ',en:'tomato',unit:'g',unitLabel:'g',base:100,kcal:18,p:0.9,c:3.9,f:0.2,fiber:1.2,tags:['vegetable','low_cal']},
- {id:'greek_yogurt',name:'กรีกโยเกิร์ต',en:'greek yogurt yogurt',unit:'g',unitLabel:'g',base:100,kcal:59,p:10,c:3.6,f:0.4,fiber:0,tags:['dairy','high_protein','low_fat']},
- {id:'milk',name:'นม',en:'milk',unit:'ml',unitLabel:'ml',base:100,kcal:61,p:3.2,c:4.8,f:3.3,fiber:0,tags:['dairy']},
- {id:'almonds',name:'อัลมอนด์',en:'almonds nuts',unit:'g',unitLabel:'g',base:100,kcal:579,p:21,c:22,f:50,fiber:12.5,tags:['snack']},
- {id:'peanut_butter',name:'เนยถั่ว',en:'peanut butter',unit:'g',unitLabel:'g',base:100,kcal:588,p:25,c:20,f:50,fiber:6,tags:['snack']},
- {id:'olive_oil',name:'น้ำมันมะกอก',en:'olive oil',unit:'piece',unitLabel:'ช้อนชา',base:1,kcal:40,p:0,c:0,f:4.5,fiber:0,tags:[]},
- {id:'coffee',name:'กาแฟ',en:'coffee black coffee',unit:'ml',unitLabel:'ml',base:100,kcal:2,p:0.3,c:0,f:0,fiber:0,tags:['drink','low_cal']},
- {id:'green_tea',name:'ชาเขียว',en:'green tea',unit:'ml',unitLabel:'ml',base:100,kcal:1,p:0,c:0,f:0,fiber:0,tags:['drink','low_cal']},
- {id:'almond_milk',name:'นมอัลมอนด์',en:'almond milk',unit:'ml',unitLabel:'ml',base:100,kcal:13,p:0.4,c:0.3,f:1.1,fiber:0.3,tags:['dairy','low_cal','drink']},
-];
+const SHEET="1psMuUep8pWPqqnPVS9w7y-55lToFBRbvvKu3BGkm5bQ";
+const SNAP=[{"title":"สรุปแผนรวม","rows":[["ทริปเซี่ยงไฮ้ 24–30 ธ.ค. 2026 (7 วัน 6 คืน) — Peingwaree Charoenphanij & Pichitra Charoenpol"],["Link: https://drive.google.com/drive/folders/1sVreXvah_TnnyrbXIQCgCyjrJPcddg6h (ไฟล์หลักฐานการจองทั้งหมด)\nตารางรวมทุกวัน • คลิกแท็บด้านล่างเพื่อดูรายละเอียดรายวัน • ตัวเลขงบประมาณรายวันเป็นค่าประมาณ (¥ CNY ต่อ 2 คน)"],[],["วัน","วันที่","โซนที่เที่ยว","พักคืนนี้ที่","ไฮไลต์ / ไปไหนบ้าง","การเดินทางหลัก","ต้องจอง/ต้องทำ","แท็บรายละเอียด","งบประมาณวันนี้ (¥)"],["1","พฤ. 24 ธ.ค. 2026","หวงผู่ / หนานจิงโร้ด","Waiting Hotel (หนานจิงตะวันออก)","บิน MU542 → เข้าเมือง → ถนนคนเดินหนานจิงตะวันออก + The Bund ยามค่ำ (คริสต์มาสอีฟ)","เครื่องบิน • Metro สาย 2","เช็คอินออนไลน์ • แจ้ง Waiting Hotel ว่าถึงดึก","วัน1 24ธ.ค.","675"],["2","ศ. 25 ธ.ค. 2026","เมืองเก่า / จิ้งอัน / เดอะบันด์","Waiting Hotel (หนานจิงตะวันออก)","สวนหยูหยวน + ตลาดเมืองเก่า → วัดจิ้งอัน + ห้างหนานจิงตะวันตก → ล่องเรือแม่น้ำหวงผู่ยามค่ำ","Metro สาย 10 / สาย 2 • เดิน","ซื้อตั๋วล่องเรือล่วงหน้า","วัน2 25ธ.ค.","1,112"],["3","ส. 26 ธ.ค. 2026","จตุรัสประชาชน / เขตฝรั่งเศส","Mehood Elegant Hotel Shanghai Bund (หงโข่ว)","เช็คเอาท์ → พิพิธภัณฑ์เซี่ยงไฮ้ → ถนนอู่คัง/อันฝู → เทียนจื่อฟาง/ซินเทียนตี้ → เช็คอิน Suite","แท็กซี่/Didi • Metro","จองบัตรเข้าพิพิธภัณฑ์ (พาสปอร์ต)","วัน3 26ธ.ค.","780"],["4","อา. 27 ธ.ค. 2026","ซูโจว (นั่งรถไฟ ~30 นาที)","Mehood Elegant Hotel Shanghai Bund (หงโข่ว)","รถไฟความเร็วสูง → สวนจั่วเจิ้ง → พิพิธภัณฑ์ซูโจว → ถนนผิงเจียง","Didi • รถไฟความเร็วสูง","ซื้อตั๋วรถไฟ (พาสปอร์ต)","วัน4 27ธ.ค.","740"],["5","จ. 28 ธ.ค. 2026","ผู่ตง / เฉียนถาน / ลู่เจียจุ่ย","Kimpton Qiantan Shanghai by IHG (ผู่ตง)","เช็คเอาท์ Mehood → ย้ายไป Kimpton (ฮันนีมูน) → ริมน้ำเฉียนถาน → Shanghai Tower ยามเย็น","Didi","เตรียมเงินสด/บัตรชำระ CNY 3,166.94 ที่โรงแรม • ซื้อตั๋ว Shanghai Tower","วัน5 28ธ.ค.","1,115"],["6","อ. 29 ธ.ค. 2026","ผู่ตง (ดิสนีย์)","Kimpton Qiantan Shanghai by IHG (ผู่ตง)","เที่ยวดิสนีย์ทั้งวัน ทานข้าวในสวน ชมการแสดงตอนเย็น","Didi","ซื้อบัตรดิสนีย์ล่วงหน้า (App Shanghai Disney Resort)","วัน6 29ธ.ค.","2,020"],["7","พ. 30 ธ.ค. 2026","ผู่ตง → สนามบิน PVG","— (กลับกรุงเทพ)","อาหารเช้า → เช็คเอาท์ → สนามบิน → MU8609 กลับ BKK","Didi • เครื่องบิน","ตรวจเวลาเช็คเอาท์ Kimpton • เก็บพาสปอร์ต","วัน7 30ธ.ค.","180"],["รวมงบเที่ยว/กิน/เดินทางโดยประมาณ (¥ ไม่รวมค่าที่พักและตั๋วเครื่องบินที่จองแล้ว)","","","","","","","","6,622"],[],["(1) Waiting Hotel และ Mehood จองในชื่อ Pichitra แต่ Kimpton จองในชื่อ Peingwaree\n(2) Kimpton ต้องชำระ CNY 3,166.94 ที่โรงแรมวันที่ 28 ธ.ค. "]]},{"title":"ข้อมูลเที่ยวบิน","rows":[["ข้อมูลเที่ยวบิน (Agoda) — เลขจอง 2060563881 • PNR: NZEJCB"],["เวลาทั้งหมดเป็นเวลาท้องถิ่นของสนามบินนั้นๆ (จีนเร็วกว่าไทย 1 ชม.) • ออกตั๋ว/ใบเสร็จวันที่ 20 ต.ค. 2026"],[],["ขา","เที่ยวบิน","วันที่","ต้นทาง","เวลาออก","ปลายทาง","เวลาถึง","สายการบิน","ชั้นโดยสาร","หมายเหตุ"],["ขาไป","MU 542","พฤ. 24 ธ.ค. 2026","กรุงเทพ สุวรรณภูมิ (BKK)","13:35","เซี่ยงไฮ้ ผู่ตง (PVG)","18:55","China Eastern Airlines","Economy","บินตรง"],["ขากลับ","MU 8609","พ. 30 ธ.ค. 2026","เซี่ยงไฮ้ ผู่ตง (PVG)","14:40","กรุงเทพ สุวรรณภูมิ (BKK)","18:25","China Eastern Airlines (ให้บริการโดย Shanghai Airlines)","Economy","บินตรง"],[],["ผู้โดยสาร","หมายเลขตั๋ว","กระเป๋าเช็คอิน","กระเป๋าถือขึ้นเครื่อง","","กระเป๋าถือขึ้นเครื่อง"],["Peingwaree Charoenphanij","781-3944145290","1 ชิ้น/คน ชิ้นละ 23 kg (ทั้งขาไป–ขากลับ)","1 ชิ้น/คน ชิ้นละ 7 kg"],["Pichitra Charoenpol","781-3944145291","1 ชิ้น/คน ชิ้นละ 23 kg (ทั้งขาไป–ขากลับ)","1 ชิ้น/คน ชิ้นละ 7 kg"],[],["รายการราคา","จำนวนเงิน (THB)"],["ค่าบัตรโดยสาร x 2","9,763.60"],["ภาษีและค่าธรรมเนียม x 2","16,794.38"],["ส่วนลดทั่วไป x 2","(335.80)"],["ส่วนลดจากโค้ดโปรโมชั่น x 2","(252.23)"],["ส่วนลดจากช่องทางการชำระเงิน","(449.48)"],["ราคารวมที่ชำระ (บัตร)","25,520.47"],[],["ข้อควรทราบจากใบจอง: เช็คอิน/เลือกที่นั่ง/ซื้ออาหารเพิ่ม ใช้เลข PNR ของสายการบิน • ถึงสนามบินอย่างน้อย 3 ชม. • พาสปอร์ตเหลืออายุ ≥ 6 เดือนหลังจบการเดินทาง • ใช้ตั๋วตามลำดับขาไป–ขากลับ"]]},{"title":"โรงแรม","rows":[["ข้อมูลโรงแรม 3 แห่ง (เซี่ยงไฮ้ 6 คืน)"],[],["รายการ","① Waiting Hotel (Nanjing East Rd)","② Mehood Elegant Hotel Shanghai Bund","③ Kimpton Qiantan Shanghai by IHG"],["ช่วงเข้าพัก"],["เช็คอิน","Thu 24 Dec 2026","Sat 26 Dec 2026","Mon 28 Dec 2026"],["เช็คเอาท์","Sat 26 Dec 2026","Mon 28 Dec 2026","Wed 30 Dec 2026"],["จำนวนคืน","2 คืน","2 คืน","2 คืน"],["เวลาเช็คอิน/เอาท์","เช็คอินหลัง 14:00 / เช็คเอาท์ก่อน 12:00","เช็คอินหลัง 15:00 / เช็คเอาท์ก่อน 12:00","แจ้งเวลาถึง 11:00–12:00 (ใบจองไม่ระบุเวลามาตรฐาน — ตรวจกับโรงแรม)"],["ประเภทห้อง","Smart Designer Double Bed Room (เตียงควีน 1 เตียง)","Suite With City View (เตียงคิง 1 เตียง)","Essential King Room (เตียงคิง)"],["ผู้เข้าพัก/ชื่อในใบจอง","Pichitra Charoenpol (2 ผู้ใหญ่)","Pichitra Charoenpol (2 ผู้ใหญ่)","Peingwaree Charoenphanij (2 ผู้ใหญ่)"],["อาหาร","ไม่รวมอาหาร","อาหารเช้า 2 ท่าน วันที่ 27 และ 28 ธ.ค. + มินิบาร์ 1 + ของว่างต้อนรับ 1","อาหารเช้า รวม • น้ำดื่ม • WiFi ฟรี • กาแฟ/ชา • ที่จอดรถ"],["ที่อยู่","7th Floor, Shengdena Building, No.387 Nanjing East Road, Huangpu District, Shanghai, China","No.299 Wusong Road, Hongkou District, Shanghai 200080, China","No.9, Lane 199 Qian Tan Avenue, Pudong District, Shanghai 200126, China (上海金普顿前滩酒店)"],["โทรศัพท์","+86-21-63338667-9","+86-21-63938989 / +86-15021749335 / +86-21-53309805","— (ไม่ระบุในใบจอง)"],["จองผ่าน","Trip.com","Trip.com","Agoda (ต้นทางจาก Booking.com)"],["เลขยืนยัน / PIN","Confirmation 1622931515998156 • PIN 2637 • Booking 1622931515996352","Confirmation 1622931515462982 • PIN 9175 • Booking 1622931515456856","Agoda Booking ID 2060598582 • Ref 6030131501 • Member ID 473978652"],["การชำระเงิน","ชำระแล้ว (PromptPay) 21 ต.ค. 2026","ชำระแล้ว (Visa ****2110) 20 ต.ค. 2026","ยังไม่ชำระ → จ่ายที่โรงแรมวันเช็คอิน 28 ธ.ค."],["ราคา","THB 6,181.24","THB 11,355.62","CNY 3,166.94"],["นโยบายยกเลิก","ยกเลิกฟรีก่อน 18:00 น. 24 ธ.ค. 2026 หลังจากนั้นเสีย THB 3,153.12 (ไม่เข้าพักก็เสียค่าธรรมเนียม)","ยกเลิกฟรีก่อน 18:00 น. 26 ธ.ค. 2026 หลังจากนั้นเสีย THB 6,117.19 (ไม่เข้าพักก็เสียค่าธรรมเนียม)","ยกเลิกฟรีก่อน 27 ธ.ค. 2026 ภายใน 1 วันก่อนเช็คอินเสีย 43% ของมูลค่าจอง ไม่ไปเช็คอินเสีย 43% ของมูลค่าทั้งหมด"],["ข้อควรทำ","แจ้งโรงแรมว่าเครื่องถึง PVG 18:55 จะถึงโรงแรมประมาณ 21:30–22:00","ฝากกระเป๋าก่อนเวลาเช็คอิน 15:00 ได้ถ้าไปถึงเช้า","แสดงบัตรประชาชน/พาสปอร์ตที่ตรงกับชื่อ Peingwaree • แจ้งว่าเป็นฮันนีมูน • เตรียมเงินชำระ"]]},{"title":"งบประมาณ","rows":[["งบประมาณทริป"],["สีน้ำเงิน = ข้อมูลจากใบจอง/ค่าประมาณที่แก้ได้ • สีเขียว = ดึงจากแท็บอื่น • สีเหลือง = ค่าที่ต้องใส่เอง"],[],["อัตราแลกเปลี่ยน (THB ต่อ 1 CNY)","4.60","สมมติฐาน: 4.60 (ไม่ใช่เรตจริง) → แก้เป็นเรตวันที่แลกเงินจริง"],[],["รายการที่จองแล้ว","จำนวน (THB)","จำนวนเดิม","สถานะ","หมายเหตุ"],["ตั๋วเครื่องบิน 2 คน (ไป–กลับ)","25,520.47","","ชำระแล้ว (บัตร)","Agoda 2060563881"],["Waiting Hotel 2 คืน","6,181.24","","ชำระแล้ว (PromptPay)","Trip.com"],["Mehood Elegant Hotel 2 คืน","11,355.62","","ชำระแล้ว (Visa ****2110)","Trip.com"],["รวมที่ชำระแล้ว (THB)","43,057.33"],["Kimpton Qiantan 2 คืน — จ่ายที่โรงแรม (CNY)","3,166.94","CNY","ชำระที่โรงแรม 28 ธ.ค.","Agoda 2060598582"],["Kimpton แปลงเป็น THB (ตามเรตสมมติ)","14,567.92"],["รวมค่าตั๋วเครื่องบิน + ที่พัก (THB)","57,625.25"],[],["ค่าใช้จ่ายระหว่างทริป (ประมาณการ)","จำนวน (¥ CNY)","จำนวน (THB)"],["วัน1 พฤ. 24 ธ.ค. 2026 — เดินทางถึงเซี่ยงไฮ้ • ค่ำเดินเล่นหนานจิงโร้ด–เดอะบันด์ • จิบค็อกเทลบาร์ดาดฟ้า","675","3,105"],["วัน2 ศ. 25 ธ.ค. 2026 — เมืองเก่า–หยูหยวน • วัดจิ้งอัน • ตลาดคริสต์มาส • ล่องเรือแม่น้ำหวงผู่","1,112","5,115"],["วัน3 ส. 26 ธ.ค. 2026 — ย้ายโรงแรมไป Mehood • พิพิธภัณฑ์ธรรมชาติวิทยา (ไดโนเสาร์) • พิพิธภัณฑ์เซี่ยงไฮ้","780","3,588"],["วัน4 อา. 27 ธ.ค. 2026 — ทริปวันเดียวซูโจว (Suzhou)","740","3,404"],["วัน5 จ. 28 ธ.ค. 2026 — ย้ายไป Kimpton ฉีอันถาน (ผู่ตง) • Shanghai Tower ชมพระอาทิตย์ตก","1,115","5,129"],["วัน6 อ. 29 ธ.ค. 2026 — Shanghai Disney Resort (ทั้งวัน)","2,020","9,292"],["วัน7 พ. 30 ธ.ค. 2026 — เดินทางกลับกรุงเทพ","180","828"],["รวมค่าใช้จ่ายระหว่างทริป","6,622","30,461"],[],["ประมาณการค่าใช้จ่ายรวมทั้งทริป (THB)","88,086"],["เฉลี่ยต่อคน (THB)","44,043"],[],["หมายเหตุ: ค่าใช้จ่ายระหว่างทริปเป็นค่าประมาณจากความรู้ทั่วไป (ค่าตั๋วเข้าชม/แท็กซี่/อาหาร) ไม่ใช่ราคาจริง ตรวจราคาล่าสุดก่อนซื้อ และไม่รวมช้อปปิ้ง/ค่าโรมมิ่ง/ประกันเดินทาง"]]},{"title":"เช็คลิสต์","rows":[["เช็คลิสต์ก่อนเดินทาง & กำหนดสำคัญ"],[],["เสร็จแล้ว","หัวข้อ","รายละเอียด","กำหนด"],["⬜","พาสปอร์ต","อายุเหลือ ≥ 6 เดือนหลังจบการเดินทาง (ตามใบจอง Agoda) • พกทั้ง 2 เล่ม","ก่อนออกเดินทาง"],["⬜","วีซ่า/ข้อกำหนดเข้าจีน","ตรวจนโยบายยกเว้นวีซ่าไทย–จีนและข้อกำหนดขาเข้าล่าสุดจากสถานทูต/แหล่งทางการ","ก่อนเดินทาง"],["⬜","เช็คอินออนไลน์","ใช้ PNR NZEJCB กับ China Eastern / Shanghai Airlines เลือกที่นั่ง","24 ชม. ก่อนบิน (ตรวจเงื่อนไข)"],["⬜","ใบจองโรงแรม (ออฟไลน์)","เซฟ/พิมพ์ใบจอง 3 โรงแรม + PIN ไว้ในมือถือแบบออฟไลน์","ก่อนเดินทาง"],["⬜","ชื่อผู้จอง vs ผู้เช็คอิน","Waiting & Mehood = Pichitra, Kimpton = Peingwaree (ต้องแสดง ID ตรงชื่อ)","ทุกครั้งที่เช็คอิน"],["⬜","แจ้ง Waiting Hotel ถึงช้า","ข้อความ/โทร +86-21-63338667-9 แจ้งว่าถึงประมาณ 21:30–22:00","ก่อน 18:00 วันที่ 24 ธ.ค."],["⬜","เงินชำระที่ Kimpton","CNY 3,166.94 ชำระที่โรงแรม","28 ธ.ค."],["⬜","Alipay / WeChat Pay","ผูกบัตล่วงหน้า พก cash สำรองจำนวนหนึ่ง","ก่อนเดินทาง"],["⬜","อินเทอร์เน็ต","eSIM หรือโรมมิ่ง (บริการบางตัว เช่น Google/LINE อาจใช้ไม่ได้ในจีน เตรียมทางเลือก)","ก่อนเดินทาง"],["⬜","แอปที่ควรมี","Didi, Alipay (mini programs), Trip.com, 12306/ตั๋วรถไฟ, แผนที่ออฟไลน์","ก่อนเดินทาง"],["⬜","ซื้อตั๋วล่วงหน้า","ตลาดคริสต์มาส Christkindlmarkt on the Bund (25 ธ.ค. รอบ ~18:15), พิพิธภัณฑ์ธรรมชาติวิทยาเซี่ยงไฮ้ (26 ธ.ค. ไดโนเสาร์ ใช้พาสปอร์ตจอง), พิพิธภัณฑ์เซี่ยงไฮ้, Shanghai Tower, ล่องเรือหวงผู่, Shanghai Disney, รถไฟซูโจว, พิพิธภัณฑ์ซูโจว","ทยอยจองก่อนไป"],["⬜","เสื้อผ้า/ของใช้","อากาศประมาณ 0–9°C • เสื้อกันหนาว ถุงมือ หมวก ร่ม • ปลั๊กแปลง/พาวเวอร์แบงก์ (พาวเวอร์แบงก์ต้องอยู่กับตัวบนเครื่อง)","ก่อนเดินทาง"],["⬜","ประกันเดินทาง","ตรวจความคุ้มครอง/ติดต่อประกัน","ก่อนเดินทาง"],[],["","กำหนดยกเลิกฟรี","รายละเอียด","เส้นตาย"],["","Waiting Hotel","หลังเวลานี้เสีย THB 3,153.12","18:00 น. 24 ธ.ค. 2026 (เวลาโรงแรม)"],["","Mehood Elegant","หลังเวลานี้เสีย THB 6,117.19","18:00 น. 26 ธ.ค. 2026 (เวลาโรงแรม)"],["","Kimpton Qiantan","ภายใน 1 วันก่อนเช็คอิน/ไม่ไป เสีย 43%","ก่อน 27 ธ.ค. 2026"]]},{"title":"วัน1 24ธ.ค.","rows":[["วัน1 | พฤ. 24 ธ.ค. 2026 — เดินทางถึงเซี่ยงไฮ้ • ค่ำเดินเล่นหนานจิงโร้ด–เดอะบันด์ • จิบค็อกเทลบาร์ดาดฟ้า"],["พักคืนนี้: Waiting Hotel (หนานจิงตะวันออก)   |   ไฮไลต์: บิน MU542 → เข้าเมือง → ถนนคนเดินหนานจิงตะวันออก + The Bund ยามค่ำ (คริสต์มาสอีฟ) → ค็อกเทลที่ ROOF (Shanghai EDITION)"],["เวลา","กิจกรรม / สถานที่","รายละเอียด / ที่อยู่","การเดินทาง","ประมาณการ ¥ (CNY, 2 คน)","หมายเหตุ / ต้องจองล่วงหน้า"],["10:30","ถึงสนามบินสุวรรณภูมิ","เช็คอินสายการบิน China Eastern ใช้ PNR NZEJCB ได้ทั้งเช็คอินออนไลน์/เลือกที่นั่ง ถึงสนามบินก่อนบินอย่างน้อย 3 ชม. (ตามใบจอง)","-","-","กระเป๋าเช็คอิน 23 kg + ถือขึ้นเครื่อง 7 kg ต่อคน"],["13:35","ออกเดินทาง MU542 BKK → PVG","บินตรง China Eastern Airlines ชั้น Economy","เครื่องบิน","-","ถึง PVG 18:55 (เวลาจีน เร็วกว่าไทย 1 ชม.)"],["18:55","ถึงสนามบินผู่ตง (PVG)","ผ่านตรวจคนเข้าเมือง รับกระเป๋า (คาดใช้เวลา 60–90 นาที) ซื้อ/เปิดใช้ eSIM–Alipay–WeChat Pay","-","-","ตรวจเงื่อนไขวีซ่า/ยกเว้นวีซ่าไทย–จีนล่าสุด และกรอกข้อมูลขาเข้าตามที่กำหนด"],["20:30","เดินทางเข้าเมือง","Metro สาย 2 จาก Pudong Airport ไปสถานี East Nanjing Rd (ตรงไม่ต้องเปลี่ยนสาย ใช้เวลา ~1 ชม. 10 นาที) หรือ Didi/แท็กซี่ ~¥200–250","Metro สาย 2 / Didi","25","ถ้าถึงดึกหรือกระเป๋าเยอะ ใช้แท็กซี่แทน (งบข้างๆ คือค่า Metro)"],["21:45","เช็คอิน Waiting Hotel","7th Floor, Shengdena Bldg, No.387 Nanjing East Rd, Huangpu • ห้อง Smart Designer Double Bed (เตียงควีน) • ยืนยัน 1622931515998156 / PIN 2637","เดิน","-","ใบจองคือชื่อ Pichitra Charoenpol • เลย 18:00 วันที่ 24 ธ.ค. หากไม่เข้าพักโดนค่าธรรมเนียม THB 3,153.12 → ส่งข้อความ/โทรแจ้งโรงแรมว่าถึงดึก โทร +86-21-63338667-9"],["22:15","เดินเล่นถนนคนเดินหนานจิงตะวันออก + The Bund","ไฟสว่างบรรยากาศคริสต์มาสอีฟ เดินต่อไปริมแม่น้ำ The Bund (~10 นาที) ชมเส้นขอบฟ้าปู้ตง/Oriental Pearl","เดิน","-","ไฟริมแม่น้ำอาจปิดราว 22:00–23:00 ตรวจเวลาอีกครั้ง • อากาศประมาณ 2–9°C เตรียมเสื้อกันหนาว"],["22:45","จิบค็อกเทลที่ ROOF (Shanghai EDITION)","199 Nanjing East Rd (南京东路199号) ชั้น 29 • บาร์ดาดฟ้ากลางแจ้งวิวตึกเก่าริมบันด์–ผู่ตง อยู่บนถนนหนานจิงตะวันออกเดียวกับโรงแรม • ชั้นล่างลงมามีบาร์ในร่ม Punch Room","เดิน ~5–10 นาทีจากโรงแรม","550","คืนคริสต์มาสอีฟคนแน่น ลองจองโต๊ะล่วงหน้า • ดาดฟ้าโล่ง 2–9°C ถ้าหนาวไปให้ลง Punch Room • รายการแจ้งเปิดถึงเที่ยงคืน ตรวจเวลาและการแต่งกายอีกครั้ง • ทางเลือกประหยัดกว่า: The Captain Rooftop Bar (วิวบันด์ เปิดถึง ~01:00)"],["23:50","มื้อดึก / ซื้อของเข้าห้อง","ร้านเซิ่งเจียน/บะหมี่/ร้านสะดวกซื้อแถวถนนคนเดิน","เดิน","100","โรงแรมไม่รวมอาหารเช้า"],["รวมค่าใช้จ่ายโดยประมาณของวันนี้ (¥)","","","","675","ตัวเลขสีน้ำเงิน = ค่าประมาณ แก้ได้"],[],["แผนสำรอง / ข้อแนะนำ: เครื่องดีเลย์/ถึงดึกมาก: ข้ามการเดินเล่นกลางคืนไปทำวันที่ 2 ตอนเย็นแทน"]]},{"title":"วัน2 25ธ.ค.","rows":[["วัน2 | ศ. 25 ธ.ค. 2026 — เมืองเก่า–หยูหยวน • วัดจิ้งอัน • ตลาดคริสต์มาส • ล่องเรือแม่น้ำหวงผู่"],["พักคืนนี้: Waiting Hotel (หนานจิงตะวันออก)   |   ไฮไลต์: เช้า Da Hu Chun → สวนหยูหยวน + ตลาดเมืองเก่า → HeyTea → วัดจิ้งอัน + ห้างหนานจิงตะวันตก → ตลาดคริสต์มาส Rockbund → ล่องเรือหวงผู่ยามค่ำ"],["เวลา","กิจกรรม / สถานที่","รายละเอียด / ที่อยู่","การเดินทาง","ประมาณการ ¥ (CNY, 2 คน)","หมายเหตุ / ต้องจองล่วงหน้า"],["8:30","อาหารเช้า Da Hu Chun (大壶春) — เซิ่งเจียนชื่อดัง","136 Sichuan Middle Rd (四川中路136号) • ร้านเก่าก่อตั้งปี 1932 ซาลาเปาทอดไส้หมูแบบไม่มีน้ำซุป สั่งเป็น 'เหลียง' (1 เหลียง = 4 ชิ้น) สั่งเมนูหมูกับหมู+กุ้งได้","เดิน ~10 นาทีจาก East Nanjing Rd","50","เปิดราว 06:30–19:30 (ตรวจอีกครั้ง) • ไปก่อน 09:00 คิวน้อย • สำรอง: Yang's Fry-Dumpling สาขา 486 Zhejiang Middle Rd (ไส้มีซุปเยอะ เปลือกหนา)"],["09:30","สวนหยูหยวน (Yu Garden)","สวนจีนคลาสสิกสมัยราชวงศ์หมิง ใช้เวลา ~1.5–2 ชม. ตั๋วประมาณ ¥30–40/คน","Metro สาย 10 (1 สถานี) หรือเดิน ~25 นาที","80","ไปเช้าคนน้อย • ตรวจราคา/เวลาเปิดก่อนไป"],["11:30","ตลาดหยูหยวน + ถนนเมืองเก่า","ช้อปของฝาก ชมอาคารสไตล์เก่า ชา/ขนมจีนโบราณ","เดิน","50","ราคาของที่ระลึกมักสูง ต่อราคาได้"],["12:30","มื้อกลางวัน เสี่ยวหลงเปา","ร้านเสี่ยวหลงเปาดังในย่านหยูหยวน (เช่น Nanxiang Mantou Dian — คิวยาว) หรือ Din Tai Fung สาขาใกล้","เดิน","150","มาก่อนเที่ยงลดคิว"],["13:30","HeyTea (喜茶) สาขา New World Daimaru","1F 1A-06C, ห้าง New World Daimaru, 228 Nanjing East Rd (上海新世界大丸百货) • ชาชีสโฟมชื่อดัง ใกล้ถนนคนเดินหนานจิง เปิด 10:00–22:00 (ตาม Trip.com)","เดิน/Metro (ตรวจแผนที่ก่อนไป)","50","อยากได้มัทฉะแทน: Matcha Island (抹岛抹茶) สาขา Jing'an Joy City ชั้น 1 โซนเหนือ • อยากได้กาแฟ: % Arabica Roastery ที่ Rockbund (169 Yuanmingyuan Rd) แวะก่อนเข้าตลาดคริสต์มาส • ตรวจเวลาเปิดในแอปแผนที่ก่อนไป"],["14:15","วัดจิ้งอัน (Jing'an Temple)","วัดทองสวยกลางเมือง ตั๋วประมาณ ¥50/คน","Metro สาย 10→สาย 2 (ไป Jing'an Temple) หรือ Didi ~¥30","130","ตรวจเวลาเปิด-ปิดฤดูหนาว"],["16:00","ช้อปปิ้ง/คาเฟ่ ถนนหนานจิงตะวันตก","ห้าง Plaza 66, Kerry Centre, CITIC Square ฯลฯ ตกแต่งคริสต์มาส พักดื่มกาแฟ","เดิน","80"],["17:30","กลับโรงแรมพัก/เปลี่ยนเสื้อ","","Metro สาย 2 (Jing'an Temple → East Nanjing Rd)","12"],["18:15","ตลาดคริสต์มาส Christkindlmarkt on the Bund + มื้อเย็น","ย่าน Waitanyuan/Rockbund, Yuanmingyuan Rd (外滩源) ตลาดสไตล์เยอรมัน ไส้กรอก/ราแคล็ต/ไวน์ร้อน/ของแต่งบ้าน กินแทนมื้อเย็นที่นี่ได้ • ตั๋ว ¥30/คน (ราคาปีก่อน: หน้างาน ¥40)","Didi ~¥15–20 หรือเดิน ~15–20 นาทีจากโรงแรม","260","ต้องซื้อตั๋วล่วงหน้า: ผ่าน SmartShanghai Ticketing Mini Program (ใน WeChat) เลือกรอบเวลา เข้าได้เฉพาะรอบที่จอง ไม่คืนเงิน • ปิดทุกวันจันทร์–อังคาร (25 ธ.ค. เป็นวันศุกร์ เปิด) • ระวังแพลงตั๋วฝากขาย ซื้อแต่ช่องทางทางการ • เก็บให้ทัน 19:45 เพื่อไปล่องเรือ 20:00"],["20:00","ล่องเรือแม่น้ำหวงผู่ยามค่ำ","ชมสองฝั่ง The Bund & ปู้ตง ใช้เวลา ~50–60 นาที ราคาประมาณ ¥100–150/คน","เดินไปท่าเรือใกล้ The Bund","250","ซื้อตั๋วล่วงหน้า (Trip.com/Klook) ตรวจรอบเรือ"],["21:30","เดินกลับโรงแรม","","เดิน","-"],["รวมค่าใช้จ่ายโดยประมาณของวันนี้ (¥)","","","","1,112","ตัวเลขสีน้ำเงิน = ค่าประมาณ แก้ได้"],[],["แผนสำรอง / ข้อแนะนำ: ฝนตก: ย้าย Yu Garden เป็นพิพิธภัณฑ์เซี่ยงไฮ้ (ต้องจองล่วงหน้า) แล้วล่องเรือคืนอื่น"]]},{"title":"วัน3 26ธ.ค.","rows":[["วัน3 | ส. 26 ธ.ค. 2026 — ย้ายโรงแรมไป Mehood • พิพิธภัณฑ์ธรรมชาติวิทยา (ไดโนเสาร์) • พิพิธภัณฑ์เซี่ยงไฮ้"],["พักคืนนี้: Mehood Elegant Hotel Shanghai Bund (หงโข่ว)   |   ไฮไลต์: เช็คเอาท์ → พิพิธภัณฑ์ธรรมชาติวิทยาเซี่ยงไฮ้ (ไดโนเสาร์) → พิพิธภัณฑ์เซี่ยงไฮ้ → HeyTea → เช็คอิน Suite"],["เวลา","กิจกรรม / สถานที่","รายละเอียด / ที่อยู่","การเดินทาง","ประมาณการ ¥ (CNY, 2 คน)","หมายเหตุ / ต้องจองล่วงหน้า"],["08:15","เช็คเอาท์ Waiting Hotel","ต้องเช็คเอาท์ก่อน 12:00","-","-"],["08:45","ย้ายไป Mehood (หงโข่ว) ฝากกระเป๋า","No.299 Wusong Rd, Hongkou • เช็คอินหลัง 15:00 ฝากกระเป๋าไว้หน้าโรงแรม","แท็กซี่/Didi ~25 นาที","30","โทรแจ้งฝากกระเป๋า +86-21-63938989"],["09:30","อาหารเช้าแถวถนนอู่ซง","ย่านของกินใกล้โรงแรม","เดิน","50"],["10:30","พิพิธภัณฑ์ธรรมชาติวิทยาเซี่ยงไฮ้ (Shanghai Natural History Museum) — ไดโนเสาร์","510 Beijing West Rd ในสวน Jing'an Sculpture Park • โครงกระดูกไดโนเสาร์ยักษ์ (มีเมนชิซอรัสคอยาว) โครงกระดูกวาฬสีน้ำเงิน หุ่นไดโนเสาร์ขยับได้ ใช้เวลา ~3 ชม. • ตั๋วผู้ใหญ่ ¥30/คน","Didi ~30 นาที หรือ Metro (ตรวจเส้นทาง)","90","ไม่ขายตั๋วหน้างาน ต้องจองออนไลน์ล่วงหน้าและใช้พาสปอร์ตยืนยันตัวตน • จองผ่าน WeChat Mini Program “上海科技馆自然博物馆天文馆门票” หรือซื้อผ่าน Trip.com/Klook/GetYourGuide แล้วเอาพาสปอร์ตไปแลกตั๋วกระดาษที่ศูนย์บริการชั้น 1 • เปิด 09:00–17:00 ผู้เข้าชมคนสุดท้ายประมาณ 16:00 • ข้อมูลหนึ่งบอกว่าตั้งแต่ มี.ค. 2026 วันหยุดประจำสัปดาห์ย้ายเป็นวันอังคาร วันที่ 26 ธ.ค. เป็นวันเสาร์ น่าจะเปิด แต่ควรเช็กอีกครั้ง"],["13:30","มื้อกลางวันใกล้พิพิธภัณฑ์ธรรมชาติ","ร้านแถว Beijing West Rd / Jing'an Sculpture Park (เช่น Mercato by Jean-Georges, Da Ivo ตามข้อมูล Trip.com) หรือร้านหม้อไฟใกล้ทางเข้า","เดิน","150","เลือกร้านตามงบ ร้านฝรั่งแถวนี้ราคาสูงกว่าค่าประมาณ"],["14:45","พิพิธภัณฑ์เซี่ยงไฮ้ (จตุรัสประชาชน)","สมบัติโบราณจีน เครื่องสำริด เซรามิก ใช้เวลา ~2 ชม. เข้าฟรีแต่ต้องจอง","Metro/Didi จากพิพิธภัณฑ์ธรรมชาติ (ตรวจเส้นทาง)","20","มักต้องจองล่วงหน้าผ่านช่องทางทางการ ใช้พาสปอร์ต • ปิดวันจันทร์ • ตรวจเวลารอบเข้าชมช่วงบ่ายก่อนไป ถ้าเหนื่อยตัดรายการนี้ออกได้"],["17:00","HeyTea (喜茶) สาขา New World Daimaru","1F 1A-06C, ห้าง New World Daimaru, 228 Nanjing East Rd (上海新世界大丸百货) • เปิด 10:00–22:00 (ตาม Trip.com) ใกล้ย่านจตุรัสประชาชน/ถนนหนานจิง","เดิน/Metro (ตรวจแผนที่ก่อนไป)","50","ตรวจที่ตั้งและเวลาเปิดในแอปแผนที่ก่อนไป"],["18:00","มื้อเย็นแถวจตุรัสประชาชน/ถนนหนานจิง","เลือกร้านอาหารบรรยากาศดีย่านใกล้ๆ ก่อนกลับโรงแรม","เดิน","350"],["19:45","เช็คอิน Mehood Elegant Hotel","ห้อง Suite With City View เตียงคิงไซส์ • มีมินิบาร์ 1 + ของว่างต้อนรับ 1 • ยืนยัน 1622931515462982 / PIN 9175","แท็กซี่/Didi ~30 นาที","40","ยกเลิกฟรีก่อน 18:00 วันที่ 26 ธ.ค. • ถ้าไม่เข้าพัก ค่าธรรมเนียม THB 6,117.19 → แจ้งโรงแรมหากถึงช้า"],["รวมค่าใช้จ่ายโดยประมาณของวันนี้ (¥)","","","","780","ตัวเลขสีน้ำเงิน = ค่าประมาณ แก้ได้"],[],["แผนสำรอง / ข้อแนะนำ: โปรแกรมวันนี้อยู่ในร่มเกือบทั้งหมด ฝนตกไม่กระทบมาก • ถ้าเหนื่อยตัดพิพิธภัณฑ์เซี่ยงไฮ้ออก เหลือพิพิธภัณฑ์ธรรมชาติและพักผ่อนที่โรงแรม • เทียนจื่อฟาง/ซินเทียนตี้/ถนนอู่คัง ยังไปได้ถ้าอยากเดินเล่น"]]},{"title":"วัน4 27ธ.ค.","rows":[["วัน4 | อา. 27 ธ.ค. 2026 — ทริปวันเดียวซูโจว (Suzhou)"],["พักคืนนี้: Mehood Elegant Hotel Shanghai Bund (หงโข่ว)   |   ไฮไลต์: รถไฟความเร็วสูง → สวนจั่วเจิ้ง → พิพิธภัณฑ์ซูโจว → ถนนผิงเจียง"],["เวลา","กิจกรรม / สถานที่","รายละเอียด / ที่อยู่","การเดินทาง","ประมาณการ ¥ (CNY, 2 คน)","หมายเหตุ / ต้องจองล่วงหน้า"],["07:30","อาหารเช้าที่โรงแรม","รวมอาหารเช้า 2 ท่าน (27 และ 28 ธ.ค.)","-","-","ใช้สิทธิ์อาหารเช้า"],["08:30","ไปสถานีรถไฟเซี่ยงไฮ้ (上海站)","ประมาณ 15–25 นาที","Didi ~¥20","20","ตรวจว่าตั๋วออกที่สถานีใด (เซี่ยงไฮ้/หงเฉียว)"],["09:30","รถไฟความเร็วสูง เซี่ยงไฮ้ → ซูโจว","ประมาณ 30 นาที • ตั๋วขาไป-กลับ 2 คน รวมประมาณ ¥140","รถไฟ","140","ซื้อล่วงหน้า (Trip.com/12306) ใช้พาสปอร์ตซื้อและขึ้นรถ"],["10:30","ถึงซูโจว → ไปสวนจั่วเจิ้ง","","Didi/Metro ~¥30","30"],["11:00","สวนจั่วเจิ้ง (Humble Administrator's Garden)","มรดกโลกยูเนสโก ใช้เวลา ~2 ชม. ตั๋วประมาณ ¥70–80/คน","เดิน","150","ตรวจเวลาปิดฤดูหนาว (เร็วกว่าฤดูร้อน)"],["13:15","พิพิธภัณฑ์ซูโจว (ออกแบบโดย I.M. Pei)","ใกล้สวนจั่วเจิ้ง เข้าฟรีแต่ต้องจอง ปิดวันจันทร์","เดิน","-","ตรวจเงื่อนไขการจอง ถ้าเต็ม ข้ามได้"],["14:30","มื้อกลางวัน + เดินถนนผิงเจียง (Pingjiang Rd)","ริมคลองเก่า ร้านน้ำชา บะหมี่ซูโจว ขนม","Didi สั้นๆ","150"],["16:15","กลับสถานีรถไฟซูโจว","","Didi ~¥30","30","ควรไปถึงสถานีก่อนเวลา 30–40 นาที"],["17:15","รถไฟกลับเซี่ยงไฮ้","ถึงประมาณ 17:50","รถไฟ","-","ตั๋วรวมในแถวขาไปแล้ว"],["18:30","กลับโรงแรม + มื้อเย็นย่านใกล้โรงแรม","ย่านถนนอู่ซง/ซื่อชวนเหนือ ของกินท้องถิ่นเยอะ","Didi ~¥20","220"],["รวมค่าใช้จ่ายโดยประมาณของวันนี้ (¥)","","","","740","ตัวเลขสีน้ำเงิน = ค่าประมาณ แก้ได้"],[],["แผนสำรอง / ข้อแนะนำ: เหนื่อย/ฝนตก: ไม่ไปซูโจว → ย่านหงโข่ว: ถนนวัฒนธรรมตัวหลุน, 1933 Shanghai, พิพิธภัณฑ์ผู้ลี้ภัยชาวยิว, ถนนอู่ซง, ไฟยามค่ำริมแม่น้ำโซวโจวครีก/ไป๋ตู้ (Waibaidu)"]]},{"title":"วัน5 28ธ.ค.","rows":[["วัน5 | จ. 28 ธ.ค. 2026 — ย้ายไป Kimpton ฉีอันถาน (ผู่ตง) • Shanghai Tower ชมพระอาทิตย์ตก"],["พักคืนนี้: Kimpton Qiantan Shanghai by IHG (ผู่ตง)   |   ไฮไลต์: เช็คเอาท์ Mehood → ย้ายไป Kimpton (ฮันนีมูน) → ริมน้ำเฉียนถาน → Shanghai Tower ยามเย็น"],["เวลา","กิจกรรม / สถานที่","รายละเอียด / ที่อยู่","การเดินทาง","ประมาณการ ¥ (CNY, 2 คน)","หมายเหตุ / ต้องจองล่วงหน้า"],["07:30","อาหารเช้าที่ Mehood","วันที่ 28 รวมอาหารเช้า 2 ท่าน","-","-"],["09:45","เช็คเอาท์ Mehood","ต้องเช็คเอาท์ก่อน 12:00 • เก็บของให้เรียบร้อย","-","-"],["10:15","ย้ายไป Kimpton Qiantan Shanghai","No.9, Lane 199 Qian Tan Avenue, Pudong • ประมาณ 45–60 นาที","Didi ~¥80–120","100","ใบจองระบุเวลาถึง 11:00–12:00"],["11:30","เช็คอิน/ฝากกระเป๋าที่ Kimpton","ชำระ CNY 3,166.94 ที่โรงแรม (Agoda ไม่ได้เก็บเงินล่วงหน้า) • ห้อง Essential King • อาหารเช้า/WiFi/กาแฟ-ชา/ที่จอดรถรวม • หมายเหตุฮันนีมูนอยู่ในใบจองแล้ว","-","-","บัตรประชาชน/พาสปอร์ตต้องตรงกับชื่อในใบจอง: Peingwaree Charoenphanij • ยกเลิกฟรีก่อน 27 ธ.ค. หลังจากนั้นเสีย 43% • ค่าห้องอยู่ใน tab งบประมาณ"],["12:45","มื้อกลางวันแถวเฉียนถาน","ใกล้โรงแรม (ตรวจระยะทางจากแผนที่) เช่น ย่านห้าง Qiantan Taikoo Li","เดิน/Didi","200"],["14:15","เดินเล่นริมแม่น้ำ/สวนโหวทาน (Houtan Park)","สวนริมน้ำเดิมของงาน Expo ฟรี ถ่ายรูปคู่","Didi สั้นๆ","30","ทัศนียภาพดีช่วงบ่าย"],["15:30","ไปลู่เจียจุ่ย","","Didi ~¥35","35"],["16:15","Shanghai Tower — ชั้นชมวิว","ชมพระอาทิตย์ตก (~16:55) และไฟกลางคืน ตั๋วประมาณ ¥180/คน","เดิน","360","ซื้อล่วงหน้าผ่าน Trip.com/Klook • ตรวจรอบ/ปิดปรับปรุง"],["18:15","เดินลู่เจียจุ่ย + มื้อเย็น","Oriental Pearl, IFC, ห้างริมแม่น้ำ ร้านอาหารบรรยากาศดี","เดิน","350","เหมาะวันแรกที่ย้ายมาฮันนีมูน"],["20:00","กลับ Kimpton","","Didi ~¥40","40"],["รวมค่าใช้จ่ายโดยประมาณของวันนี้ (¥)","","","","1,115","ตัวเลขสีน้ำเงิน = ค่าประมาณ แก้ได้"],[],["แผนสำรอง / ข้อแนะนำ: ฝนตก/หมอก: เลื่อน Shanghai Tower ไปวันที่ 6 ตอนเย็น หรือเปลี่ยนเป็นห้างลู่เจียจุ่ย"]]},{"title":"วัน6 29ธ.ค.","rows":[["วัน6 | อ. 29 ธ.ค. 2026 — Shanghai Disney Resort (ทั้งวัน)"],["พักคืนนี้: Kimpton Qiantan Shanghai by IHG (ผู่ตง)   |   ไฮไลต์: เที่ยวดิสนีย์ทั้งวัน ทานข้าวในสวน ชมการแสดงตอนเย็น"],["เวลา","กิจกรรม / สถานที่","รายละเอียด / ที่อยู่","การเดินทาง","ประมาณการ ¥ (CNY, 2 คน)","หมายเหตุ / ต้องจองล่วงหน้า"],["07:00","อาหารเช้าที่ Kimpton","รวมในค่าห้อง","-","-"],["07:45","ไปดิสนีย์","ประมาณ 35–45 นาที","Didi ~¥100","100","ตรวจความสะดวกทางเข้า/ที่จอด"],["08:30","เข้า Shanghai Disneyland","เครื่องเล่นแนะนำ: TRON Lightcycle Power Run, Soaring Over the Horizon, Pirates of the Caribbean, Zootopia, Roaring Rapids • ตั๋วประมาณ ¥475–800/คน ตามวัน","-","1,200","เป็นราคาประมาณ ตรวจราคาจริงในแอป • อากาศหนาว เตรียมถุงมือ/หมวก"],["12:30","มื้อกลางวันในสวน","","-","250"],["14:00","เล่นเครื่องเล่น/ชมปราสาท","ใช้ Premier Access หรือดูเวลารอในแอป","-","-"],["17:30","มัทฉะที่ NINO MATCHA (Disneytown)","ร้านมัทฉะใน Disneytown เปิด 10:00–22:00 (ตามเว็บ Shanghai Disney Resort) แวะก่อนมื้อเย็นที่ Disneytown","เดิน","70","อยู่นอกประตูสวน ถ้าจะกลับเข้าสวนไปดูการแสดง 19:30 ตรวจเงื่อนไขเข้าซ้ำในแอป Disney ก่อน"],["18:00","มื้อเย็น","ใน Disneytown หรือในสวน","-","300"],["19:30","ชมการแสดงกลางคืน/ดอกไม้ไฟ","รอบเวลาตรวจในแอป Disney","-","-","หาจุดยืนล่วงหน้า"],["21:00","กลับ Kimpton","","Didi ~¥100","100"],["รวมค่าใช้จ่ายโดยประมาณของวันนี้ (¥)","","","","2,020","ตัวเลขสีน้ำเงิน = ค่าประมาณ แก้ได้"],[],["แผนสำรอง / ข้อแนะนำ: ไม่ไปดิสนีย์: ย่านจางเจียง/สวนเซ็นจูรี่, พิพิธภัณฑ์วิทยาศาสตร์และเทคโนโลยี, Qiantan Taikoo Li ช้อปปิ้ง, พักผ่อนที่โรงแรม (ฮันนีมูน)"]]},{"title":"วัน7 30ธ.ค.","rows":[["วัน7 | พ. 30 ธ.ค. 2026 — เดินทางกลับกรุงเทพ"],["พักคืนนี้: — (กลับกรุงเทพ)   |   ไฮไลต์: อาหารเช้า → เช็คเอาท์ → สนามบิน → MU8609 กลับ BKK"],["เวลา","กิจกรรม / สถานที่","รายละเอียด / ที่อยู่","การเดินทาง","ประมาณการ ¥ (CNY, 2 คน)","หมายเหตุ / ต้องจองล่วงหน้า"],["07:30","อาหารเช้าที่ Kimpton","","-","-"],["09:15","เช็คเอาท์ Kimpton","ใบจองไม่ระบุเวลาเช็คเอาท์ ตรวจกับโรงแรม","-","-","เช็กห้องให้ครบ พาสปอร์ต/ชาร์จเจอร์"],["09:30","ไปสนามบิน PVG","ประมาณ 45–70 นาที","Didi ~¥150–200","180","สำรองเวลาเผื่อรถติด"],["11:15","ถึงสนามบิน PVG","ใบจองแนะนำถึงอย่างน้อย 3 ชม. ก่อนบิน (~11:40) ตรวจเทอร์มินัลใน App China Eastern","-","-"],["14:40","ออกเดินทาง MU8609 PVG → BKK","บินตรง ให้บริการโดย Shanghai Airlines (code-share China Eastern)","เครื่องบิน","-","กระเป๋าเช็คอิน 23 kg + ถือขึ้นเครื่อง 7 kg ต่อคน"],["18:25","ถึงสุวรรณภูมิ (เวลาไทย)","","-","-","จบทริป"],["รวมค่าใช้จ่ายโดยประมาณของวันนี้ (¥)","","","","180","ตัวเลขสีน้ำเงิน = ค่าประมาณ แก้ได้"],[],["แผนสำรอง / ข้อแนะนำ: ถ้าอยากแวะซื้อของฝากก่อนไปสนามบิน แนะนำจบภายใน 09:00"]]},{"title":"ที่เที่ยวเด่นเซี่ยงไฮ้","rows":[["ที่เที่ยวเด่นในเซี่ยงไฮ้และเมืองรอบข้าง (ทริป 24–30 ธ.ค. 2026)"],["เฉพาะสถานที่เที่ยวหลัก ไม่รวมร้านอาหารและบาร์ • โรงแรมที่ใกล้สุดเทียบจาก 3 โรงแรมที่จองไว้ (Waiting Hotel, Mehood Bund, Kimpton Qiantan) โดยไม่ดูวันที่เข้าพัก • เวลาและราคาเป็นค่าประมาณ ตรวจซ้ำในแอปแผนที่และแอปจองก่อนไป"],[],["#","สถานที่","ประเภท","โซน","ค่าเข้า","รายละเอียดค่าเข้า","ไฮไลต์ / รายละเอียดสถานที่","โรงแรมที่ใกล้สุด","เวลา (นาที)","ไปยังไง","อยู่ในแผนวันที่"],["1","เดอะบันด์ (The Bund 外滩)","แลนด์มาร์ก / ริมน้ำ","หวงผู่","ฟรี","-","ทางเดินริมแม่น้ำหวงผู่ ชมตึกยุคอาณานิคมเรียงยาวและสกายไลน์ผู่ตง สวยสุดช่วงพลบค่ำ","Waiting Hotel","12","เดินไปทางตะวันออกตามถนนหนานจิงตะวันออกจนสุดริมน้ำ","วัน1, วัน2"],["2","ถนนคนเดินหนานจิงตะวันออก (Nanjing East Rd 南京东路)","ถนนคนเดิน / ช้อปปิ้ง","หวงผู่","ฟรี","-","ถนนช้อปปิ้งสายหลัก ไฟนีออนสว่างตอนกลางคืน มีรถรางท่องเที่ยวสั้น ๆ","Waiting Hotel","3","เดินจากโรงแรม (โรงแรมอยู่บนถนนนี้)","วัน1"],["3","สะพานไวไป๋ตู้ (Waibaidu Bridge 外白渡桥)","แลนด์มาร์ก / สะพานเหล็กเก่า","หงโข่ว / นอร์ธบันด์","ฟรี","-","สะพานเหล็กสร้างปี 1907 ข้ามคลองซูโจว ถ่ายรูปคู่สกายไลน์ผู่ตง","Mehood Bund","10","เดินจากโรงแรม","-"],["4","ล่องเรือแม่น้ำหวงผู่ (Huangpu River Cruise 黄浦江游船)","ล่องเรือ / วิวกลางคืน","เดอะบันด์","มีค่าเข้า","ประมาณ ¥120–180 ต่อคน รอบค่ำมักแพงกว่า ควรซื้อล่วงหน้า","ล่องชมตึกสองฝั่งแม่น้ำประมาณ 50–60 นาที","Waiting Hotel","15","เดินไปท่าเรือริมน้ำฝั่งเดอะบันด์","วัน2"],["5","สวนหยูหยวน (Yu Garden 豫园)","สวนจีนโบราณ","เมืองเก่า","มีค่าเข้า","ประมาณ ¥30–40 ต่อคน ตรวจราคาหน้างาน","สวนยุคหมิง ศาลา สระปลา หินประดับ","Waiting Hotel","20","Metro สาย 10 East Nanjing Rd → Yuyuan Garden 1 สถานี แล้วเดินต่อ","วัน2"],["6","ตลาดหยูหยวน (Yuyuan Bazaar 豫园商城)","ตลาด / ของฝาก","เมืองเก่า","ฟรี","-","ตึกสไตล์จีนโบราณ ร้านขนมและของฝาก ไฟโคมสวยตอนค่ำ","Waiting Hotel","20","Metro สาย 10 → Yuyuan Garden แล้วเดิน 5 นาที","วัน2"],["7","จัตุรัสประชาชนและสวนประชาชน (People's Square)","จตุรัส / สวน","หวงผู่","ฟรี","-","ใจกลางเมืองที่มีพิพิธภัณฑ์ โรงละคร และมุมหาคู่ในสวนช่วงสุดสัปดาห์","Waiting Hotel","12","เดินไปทางตะวันตกตามถนนหนานจิงตะวันออก","-"],["8","พิพิธภัณฑ์เซี่ยงไฮ้ (Shanghai Museum 上海博物馆)","พิพิธภัณฑ์","หวงผู่","ฟรี (ต้องจอง)","จองบัตรล่วงหน้าผ่านช่องทางทางการ ใช้พาสปอร์ตยืนยัน ปิดวันจันทร์ นิทรรศการพิเศษอาจเก็บเงินแยก","เครื่องสำริด เครื่องเคลือบ จิตรกรรมและโบราณวัตถุจีน","Waiting Hotel","15","เดินผ่านถนนคนเดินไปจัตุรัสประชาชน หรือ Metro 1 สถานี","วัน3"],["9","ซินเทียนตี้ (Xintiandi 新天地)","ย่านบันเทิง / ช้อปปิ้ง","ลู่วาน","ฟรี","-","บ้านชิคูเหมินเก่าปรับเป็นร้านอาหาร คาเฟ่ และบาร์","Waiting Hotel","20","Metro สาย 10 East Nanjing Rd → Xintiandi ประมาณ 3 สถานี","วัน3"],["10","เทียนจื่อฟาง (Tianzifang 田子坊)","ย่านศิลปะ / งานคราฟต์","ลู่วาน","ฟรี","-","ตรอกซอยร้านงานคราฟต์ คาเฟ่ แกลเลอรี","Waiting Hotel","25","Metro สาย 10 → Xintiandi แล้วเดิน 10 นาที หรือ Didi 15 นาที","วัน3"],["11","ถนนอู่คังและตึกอู่คัง (Wukang Rd 武康路 / Wukang Mansion)","ถนนสถาปัตยกรรม / ถ่ายรูป","ซวีฮุย","ฟรี","-","ตึกทรงหัวเรือ ถนนร่มรื่น คาเฟ่และร้านบูติกเรียงราย","Waiting Hotel","28","Metro สาย 10 → Shanghai Library แล้วเดิน 8 นาที","วัน3"],["12","ถนนอันฝู (Anfu Road 安福路)","คาเฟ่ / บูติก","ซวีฮุย","ฟรี","-","ถนนร่มรื่นเต็มไปด้วยคาเฟ่และร้านแฟชั่น","Waiting Hotel","30","Metro สาย 10 → Shanghai Library แล้วเดิน หรือ Didi 20 นาที","วัน3"],["13","วัดพระหยก (Jade Buddha Temple 玉佛禅寺)","วัด","จิ้งอัน","มีค่าเข้า","ประมาณ ¥30 ต่อคน ห้องพระหยกอาจแยกค่าเข้า","พระพุทธรูปหยกขาวองค์นั่งและองค์นอน","Waiting Hotel","20","Didi ประมาณ 20 นาที","-"],["14","วัดจิ้งอัน (Jing'an Temple 静安寺)","วัด","จิ้งอัน","มีค่าเข้า","ประมาณ ¥50 ต่อคน","วัดทองประดับสีทองสะดุดตากลางตึกสูง","Waiting Hotel","20","Metro สาย 2 East Nanjing Rd → Jing'an Temple ประมาณ 3 สถานี","วัน2"],["15","ย่านหนานจิงตะวันตก (West Nanjing Road 南京西路)","ห้างหรู / ช้อปปิ้ง","จิ้งอัน","ฟรี","-","ห้างระดับหรูหลายแห่ง เช่น Plaza 66 และ CITIC Square","Waiting Hotel","18","Metro สาย 2 → West Nanjing Rd 2 สถานี","วัน2"],["16","หอไข่มุกตะวันออก (Oriental Pearl Tower 东方明珠)","แลนด์มาร์ก / หอคอย","ผู่ตง","มีค่าเข้า","ประมาณ ¥160–230 ต่อคน ขึ้นกับแพ็กเกจ","หอคอยสัญลักษณ์เซี่ยงไฮ้ มีพื้นกระจกใส","Waiting Hotel","15","Metro สาย 2 East Nanjing Rd → Lujiazui 1 สถานี แล้วเดิน 5 นาที","-"],["17","เซี่ยงไฮ้ทาวเวอร์ ชั้นชมวิว (Shanghai Tower 上海中心大厦)","วิวเมือง","ผู่ตง","มีค่าเข้า","ประมาณ ¥180–220 ต่อคน ซื้อล่วงหน้า","จุดชมวิวชั้น 118 ของตึกสูงที่สุดในจีน เหมาะขึ้นช่วงเย็นต่อเนื่องถึงค่ำ","Waiting Hotel","18","Metro สาย 2 East Nanjing Rd → Lujiazui 1 สถานี แล้วเดิน (จาก Kimpton ใช้ Didi ประมาณ 30 นาที)","วัน5"],["18","หอชมวิว SWFC (Shanghai World Financial Center 环球金融中心)","วิวเมือง","ผู่ตง","มีค่าเข้า","ประมาณ ¥180–300 ตามชั้นที่เลือก","ตึกรูปทรงที่เปิดขวด ชั้นชมวิวมีพื้นกระจกโปร่งใส","Waiting Hotel","18","Metro สาย 2 → Lujiazui 1 สถานี แล้วเดิน","-"],["19","หอชมวิวจินเหมา ชั้น 88 (Jin Mao Tower 金茂大厦)","วิวเมือง","ผู่ตง","มีค่าเข้า","ประมาณ ¥120 ต่อคน","ตึกอาร์ตเดโคผสมสถาปัตยกรรมจีน ชั้นชมวิวราคาถูกกว่าตึกข้างเคียง","Waiting Hotel","18","Metro สาย 2 → Lujiazui 1 สถานี แล้วเดิน","-"],["20","พิพิธภัณฑ์สัตว์น้ำเซี่ยงไฮ้ (Shanghai Ocean Aquarium 上海海洋水族馆)","พิพิธภัณฑ์ / ครอบครัว","ผู่ตง","มีค่าเข้า","ประมาณ ¥165 ต่อคน","อุโมงค์ใต้น้ำยาว สัตว์น้ำจากหลายภูมิภาค","Waiting Hotel","20","Metro สาย 2 → Lujiazui แล้วเดิน 8 นาที","-"],["21","ริมน้ำเฉียนถาน (Qiantan Riverside 前滩滨江)","ริมน้ำ / สวน","เฉียนถาน","ฟรี","-","ทางเดินและทางจักรยานริมแม่น้ำหวงผู่ ทัศนียภาพโล่ง","Kimpton Qiantan","10","เดินหรือ Didi สั้น ๆ","วัน5"],["22","เซี่ยงไฮ้ดิสนีย์รีสอร์ท (Shanghai Disney Resort 上海迪士尼度假区)","ธีมปาร์ค","ผู่ตงตะวันออก","มีค่าเข้า","ประมาณ ¥400–720 ต่อคน ขึ้นกับวัน ซื้อล่วงหน้าในแอป Shanghai Disney Resort","ธีมปาร์คดิสนีย์แห่งแรกในจีนแผ่นดินใหญ่ มีเขต Zootopia และ Tomorrowland","Kimpton Qiantan","40","Didi ประมาณ 35–40 นาที หรือ Metro สาย 11 จาก Oriental Sports Center ไปสถานี Disney Resort ประมาณ 50 นาที","วัน6"],["23","จูเจียเจี่ยว (Zhujiajiao 朱家角)","เมืองน้ำโบราณ","ชิงผู่","ฟรี (ค่าเรือ/สวนแยก)","เข้าเมืองฟรี ค่าเรือประมาณ ¥60–120 ต่อลำ สวนและบ้านบางแห่งประมาณ ¥30–40","สะพานหิน คลองแคบ ตรอกอาหารพื้นเมือง เหมาะไปครึ่งวัน","Waiting Hotel","80","Metro สาย 2 หรือ 10 ไป Hongqiao Railway Station แล้วต่อสาย 17 ไป Zhujiajiao","-"],["24","สวนจั่วเจิ้ง ซูโจว (Humble Administrator's Garden 拙政园)","สวนมรดกโลก","ซูโจว","มีค่าเข้า","ประมาณ ¥70 ต่อคน ช่วงฤดูหนาวอาจถูกกว่า","สวนจีนที่ใหญ่ที่สุดของซูโจว ขึ้นทะเบียนมรดกโลก","Mehood Bund","90","Didi ไปสถานีรถไฟประมาณ 20 นาที + รถไฟความเร็วสูงประมาณ 30 นาที + Didi/Metro ในซูโจวประมาณ 20 นาที","วัน4"],["25","พิพิธภัณฑ์ซูโจว (Suzhou Museum 苏州博物馆)","พิพิธภัณฑ์ / สถาปัตยกรรม","ซูโจว","ฟรี (ต้องจอง)","จองล่วงหน้าและใช้พาสปอร์ต ปิดวันจันทร์","ออกแบบโดย I. M. Pei ตั้งอยู่ติดสวนจั่วเจิ้ง","Mehood Bund","90","เหมือนข้อ 77","วัน4"],["26","ถนนผิงเจียง (Pingjiang Road 平江路)","ย่านเก่า / คลอง","ซูโจว","ฟรี","-","ถนนริมคลอง ร้านชา คาเฟ่ และร้านของฝาก","Mehood Bund","90","เหมือนข้อ 77","วัน4"],["27","ทะเลสาบซีหู หางโจว (West Lake 西湖)","ทะเลสาบ / มรดกโลก","หางโจว","ฟรี","เดินริมทะเลสาบฟรี ล่องเรือประมาณ ¥55","ทะเลสาบมรดกโลก ทางเดินริมน้ำและสะพานเก่า","Waiting Hotel","150","Metro สาย 2 หรือ 10 ไป Hongqiao Railway Station ประมาณ 30 นาที + รถไฟความเร็วสูงประมาณ 50 นาที + Metro/Didi ในหางโจว","-"],["28","สะพานลอยวงกลมลู่เจียจุ่ย (Lujiazui Circular Footbridge 陆家嘴环形天桥)","จุดถ่ายรูป / วิวตึกสูง","ผู่ตง","ฟรี","-","สะพานลอยวงกลมกลางตึกระฟ้า เห็นหอไข่มุก เซี่ยงไฮ้ทาวเวอร์ และ SWFC รอบทิศ ถ่ายรูปได้ทั้งกลางวันและกลางคืน","Waiting Hotel","18","Metro สาย 2 East Nanjing Rd → Lujiazui 1 สถานี ออกทางสะพานลอยแล้วขึ้นสะพานวงกลม","-"],["29","มหาวิหารซวีเจียฮุย (Xujiahui Cathedral / St. Ignatius Cathedral 徐家汇天主堂)","โบสถ์ / สถาปัตยกรรม","ซวีฮุย","ฟรี","เข้าชมฟรี เปิดเป็นช่วงเวลา งดเข้าชมระหว่างพิธีมิสซา","โบสถ์ทรงโกธิกยอดแหลมคู่สีอิฐแดง สร้างปี 1910 ถ่ายรูปมุมกว้างได้สวย","Waiting Hotel","30","Metro สาย 2 → People's Square ต่อสาย 1 ไป Xujiahui","-"],["30","ย่านศิลปะ M50 (M50 Creative Park M50创意园)","ย่านศิลปะ / กราฟฟิตี้","ผู่โถว","ฟรี","เข้าย่านฟรี แกลเลอรีบางแห่งอาจเก็บเงินหรือปิดวันจันทร์","โกดังโรงงานเก่าริมคลองซูโจว ผนังกราฟฟิตี้และแกลเลอรีศิลปะร่วมสมัย","Waiting Hotel","30","Didi ประมาณ 30 นาที","-"],["31","เมืองโบราณฉีเป่า (Qibao Ancient Town 七宝古镇)","เมืองน้ำโบราณ","หมิ่นหาง","ฟรี","เข้าเมืองฟรี สถานที่ภายในบางแห่งมีค่าเข้าแยก","เมืองน้ำที่เข้าถึงง่ายด้วย Metro สะพานหิน คลองและตรอกอาหารพื้นเมือง ใกล้กว่าจูเจียเจี่ยว","Waiting Hotel","60","Metro สาย 2 → People's Square ต่อสาย 1 ไป Xujiahui ต่อสาย 9 ไป Qibao","-"],["32","พิพิธภัณฑ์ศิลปะร่วมสมัยเซี่ยงไฮ้ Power Station of Art (上海当代艺术博物馆)","พิพิธภัณฑ์ / ศิลปะร่วมสมัย","หวงผู่ (ริมน้ำ)","ฟรี","ชมฟรี นิทรรศการพิเศษอาจเก็บเงินแยกประมาณ ¥60 ปิดวันจันทร์","โรงไฟฟ้าเก่าริมแม่น้ำหวงผู่ปรับเป็นพิพิธภัณฑ์ มีปล่องสูงเด่น จุดถ่ายรูปยอดนิยม","Kimpton Qiantan","20","Didi ประมาณ 20 นาที","-"],["33","หอศิลป์จีนแห่งเซี่ยงไฮ้ (China Art Museum 中华艺术宫)","พิพิธภัณฑ์ / ศิลปะ","ผู่ตง (เอ็กซ์โป)","ฟรี","นิทรรศการถาวรฟรี นิทรรศการพิเศษอาจเก็บเงินแยก ปิดวันจันทร์","อาคารสีแดงทรงมงกุฎ (เดิมคือศาลาจีนในงานเอ็กซ์โป 2010) เก็บงานศิลปะจีนสมัยใหม่","Kimpton Qiantan","20","Didi ประมาณ 20 นาที หรือ Metro สาย 8 สถานี China Art Museum","-"],["34","พิพิธภัณฑ์ธรรมชาติวิทยาเซี่ยงไฮ้ (Shanghai Natural History Museum 上海自然博物馆)","พิพิธภัณฑ์ / สถาปัตยกรรม","จิ้งอัน","มีค่าเข้า","ประมาณ ¥30 ต่อคน ต้องจองบัตรล่วงหน้าและใช้พาสปอร์ต วันหยุดประจำสัปดาห์ต่างกันตามช่วง (พบทั้งปิดจันทร์และปิดอังคาร) ตรวจก่อนไป","อาคารทรงก้นหอยสีเขียวในสวนประติมากรรมจิ้งอัน ฟอสซิลไดโนเสาร์และตัวอย่างสัตว์กว่า 280,000 ชิ้น","Waiting Hotel","20","Metro สาย 2 East Nanjing Rd → West Nanjing Rd 2 สถานี แล้วเดินประมาณ 10 นาที","-"],["35","พิพิธภัณฑ์วิทยาศาสตร์และเทคโนโลยีเซี่ยงไฮ้ (Shanghai Science and Technology Museum 上海科技馆)","พิพิธภัณฑ์ / ครอบครัว","ผู่ตง","มีค่าเข้า","ประมาณ ¥60 ต่อคน โรงภาพยนตร์ IMAX/4D แยกค่าเข้า เปิดอังคาร–อาทิตย์ ปิดวันจันทร์","นิทรรศการวิทยาศาสตร์แบบลงมือเล่น 14 โซน หุ่นยนต์ สัตว์โลก และโรงภาพยนตร์ IMAX","Waiting Hotel","25","Metro สาย 2 East Nanjing Rd → Science & Technology Museum 4 สถานี","-"],["36","พิพิธภัณฑ์หลงเว่ย์ เวสต์บันด์ (Long Museum West Bund 龙美术馆西岸馆)","พิพิธภัณฑ์ / สถาปัตยกรรม","ซวีฮุย (เวสต์บันด์)","มีค่าเข้า","ราคาขึ้นกับนิทรรศการ ตรวจในแอปหรือเว็บทางการก่อนไป ปิดวันจันทร์","พิพิธภัณฑ์ศิลปะส่วนตัวขนาดใหญ่ อาคารคอนกรีตโค้งเป็นจุดถ่ายรูปเด่นของย่านริมน้ำเวสต์บันด์","Kimpton Qiantan","25","Didi ประมาณ 25 นาที","-"],["37","หอดูดาวเซี่ยงไฮ้ (Shanghai Astronomy Museum 上海天文馆)","พิพิธภัณฑ์ / สถาปัตยกรรม","หลิงก่าง","มีค่าเข้า","ประมาณ ¥30 ต่อคน ต้องจองล่วงหน้าและใช้พาสปอร์ต ปิดวันจันทร์ ตั๋วมักหมดเร็ว","อาคารทรงเกลียวไม่มีมุมแหลมริมทะเลสาบ Dishui เป็นหนึ่งในดาราศาสตร์พิพิธภัณฑ์ที่ใหญ่ที่สุดในโลก ไกลจากตัวเมือง","Kimpton Qiantan","70","Didi ประมาณ 60–70 นาที หรือ Metro สาย 16 ไปสถานี Dishui Lake แล้วต่อรถ","-"],[],["หมายเหตุ"],["(1) เวลาเดินทางเป็นค่าประมาณจากโรงแรมถึงที่หมาย ไม่รวมเวลารอรถและต่อคิว ช่วงเร่งด่วนหรือฝนตกอาจนานกว่านี้"],["(2) ราคาเป็นค่าประมาณจากข้อมูลทั่วไป อาจเปลี่ยนตามฤดูกาลและโปรโมชัน ตรวจราคาในแอปจองก่อนซื้อ"],["(3) วันจันทร์ในทริปนี้คือ 28 ธ.ค. พิพิธภัณฑ์หลายแห่งปิดวันจันทร์ ตรวจวันเปิดก่อนไป"],["(4) สถานที่ที่ระบุว่าต้องจองล่วงหน้าต้องใช้พาสปอร์ตตอนจองและตอนเข้า"]]},{"title":"ช้อปปิ้ง","rows":[["ช้อปปิ้งเด่นในเซี่ยงไฮ้ แยกหมวดผู้หญิง ผู้ชาย และของสะสม (ทริป 24–30 ธ.ค. 2026)"],["ยังไม่รวมของกิน • โรงแรมที่ใกล้สุดเทียบจาก 3 โรงแรมที่จองไว้ (Waiting Hotel, Mehood Bund, Kimpton Qiantan) โดยไม่ดูวันที่เข้าพัก • ร้านเปิดใหม่ ป๊อปอัป และราคาเปลี่ยนได้ ตรวจในแอปแผนที่ก่อนไป"],[],["#","ร้าน / แหล่งช้อป","ประเภท","โซน","ระดับราคา","รายละเอียดราคา","ของเด่น / ไฮไลต์ที่ควรซื้อ","โรงแรมที่ใกล้สุด","เวลา (นาที)","ไปยังไง","อยู่ในแผนวันที่"],["หมวดผู้หญิง"],["1","ถนนอันฝู (Anfu Road 安福路)","ถนนช้อป / ร้านดีไซเนอร์","ซวีฮุย","กลาง–สูง","ร้านแบรนด์ดีไซเนอร์จีนเริ่มประมาณ ¥1,000 ต่อชิ้น ร้านเล็กบางแห่งรับเฉพาะ Alipay หรือ WeChat Pay","ร้านดีไซเนอร์จีนและคอนเซ็ปต์สโตร์ (มีรายงานว่า Chen Peng มีร้านบนถนนนี้) เสื้อผ้าแนวสาวๆ แว่นตา เครื่องประดับ และคาเฟ่ถ่ายรูปสวย","Waiting Hotel","30","Metro สาย 10 → Shanghai Library แล้วเดิน หรือ Didi 20 นาที","วัน3"],["2","ซินเทียนตี้และ Xintiandi Style (新天地 / 245 Madang Rd)","ย่านช้อป / มอลล์ดีไซเนอร์","ลู่วาน","กลาง–สูง","แบรนด์ดีไซเนอร์ร่วมสมัยประมาณ ¥1,400–4,200 ต่อชิ้น (ตามแหล่งข้อมูลหนึ่ง)","Xintiandi Style รวมดีไซเนอร์รุ่นใหม่จากเซี่ยงไฮ้และเอเชีย มีรายงานว่า Shushu/Tong มีร้านเรือธงในย่านนี้ อยู่ติดร้านอาหารและคาเฟ่","Waiting Hotel","20","Metro สาย 10 East Nanjing Rd → Xintiandi ประมาณ 3 สถานี","วัน3"],["3","Plaza 66 (恒隆广场)","ห้างลักชัวรี่","จิ้งอัน","สูง","แบรนด์ลักชัวรี่กว่า 100 แบรนด์ ซื้อเกิน ¥500 ในร้านที่ร่วมโครงการขอคืนภาษีได้ ถามร้านก่อนจ่าย","Louis Vuitton, Chanel, Dior, Hermès, Cartier มีบริการ Buy & Tax Refund สำหรับนักท่องเที่ยวต่างชาติ (เริ่มปี 2024 ตามข้อมูลที่พบ)","Waiting Hotel","18","Metro สาย 2 East Nanjing Rd → West Nanjing Rd 2 สถานี","วัน2"],["4","Jing An Kerry Centre (静安嘉里中心)","ห้างใหญ่","จิ้งอัน","กลาง–สูง","มีทั้งแบรนด์สากลและแบรนด์ร่วมสมัย ราคาหลากหลาย","แบรนด์แฟชั่นสากลและดีไซเนอร์ร่วมสมัย เดินต่อจาก Plaza 66 ได้ประมาณ 10 นาที","Waiting Hotel","20","Metro สาย 2 East Nanjing Rd → Jing'an Temple ประมาณ 3 สถานี แล้วเดินสั้นๆ","วัน2"],["5","K11 Art Mall และ IAPM (ถนนหวยไห่กลาง 淮海中路)","ห้างแฟชั่น / อาร์ตมอลล์","ลู่วาน / ซวีฮุย","กลาง–สูง","K11 อยู่เลข 300 และ IAPM อยู่เลข 999 ถนน Huaihai Rd Middle","K11 รวมแบรนด์จีนหน้าใหม่และงานศิลป์ในห้าง IAPM มีแบรนด์ลักชัวรี่และดีไซเนอร์ มีรายงานว่ามีร้าน Gentle Monster (แว่นตาดีไซน์ศิลปะ)","Waiting Hotel","25","Metro สาย 10 East Nanjing Rd → South Shaanxi Rd ประมาณ 4 สถานี (IAPM) แวะต่อเนื่องกับซินเทียนตี้ได้","-"],["6","ไท่กู๋ลี่เฉียนถาน (Taikoo Li Qiantan 前滩太古里)","มอลล์เปิดโล่ง","เฉียนถาน","กลาง–สูง","มอลล์ใหม่ขนาดใหญ่ในเฉียนถาน มีร้านดีไซเนอร์ร่วมสมัยบางแห่ง","ช้อปได้ในวันที่ไม่อยากเดินทางไกล ต่อกับริมน้ำเฉียนถานได้ (ข้อ 21 ในแท็บที่เที่ยวเด่น)","Kimpton Qiantan","10","เดินหรือ Didi สั้นๆ ตรวจพิกัดจริงในแผนที่","-"],["7","เทียนจื่อฟาง (Tianzifang 田子坊)","ซอยดีไซเนอร์เล็ก / งานคราฟต์","ลู่วาน","กลาง","ราคาแล้วแต่ร้าน ร้านแผงเล็กควรถามเทียบ 2–3 ร้านก่อนซื้อ","ดีไซเนอร์เล็กๆ กระเป๋า เครื่องประดับ ผ้าพันคอ ของแต่งบ้านงานคราฟต์ เหมาะซื้อชิ้นเดียวไม่ซ้ำใคร","Waiting Hotel","25","Metro สาย 10 → Xintiandi แล้วเดิน 10 นาที หรือ Didi 15 นาที","วัน3"],["หมวดผู้ชาย"],["8","Labelhood Men's (ถนน Julu Rd 巨鹿路)","คอนเซ็ปต์สโตร์ดีไซเนอร์ชาย","ซวีฮุย / จิ้งอัน","กลาง–สูง","ร้านเปิดใหม่ตามบทความไกด์ ราคาขึ้นกับแบรนด์ ตรวจที่ตั้งและเวลาเปิดก่อนไป","ดีไซเนอร์จีนรุ่นใหม่สำหรับผู้ชาย เสื้อผ้าและแอคเซสซอรี่","Waiting Hotel","25","Didi ประมาณ 25 นาที ค้นชื่อร้านในแผนที่ก่อนไป","-"],["9","ดีไซเนอร์ชายจีน: Feng Chen Wang, Xander Zhou, Sankuanz","แบรนด์แฟชั่นชาย","หลายย่านในเซี่ยงไฮ้","สูง","ประมาณ ¥1,800–6,500 ต่อชิ้น (ตามแหล่งข้อมูลหนึ่ง) มีร้านเรือธงในเซี่ยงไฮ้","เสื้อผ้าแนวเทคนิคัล ทรงไซไฟ และสตรีทแวร์อาวองต์การ์ด เหมาะสายแฟชั่นที่หาชิ้นไม่ซ้ำ","-","-","ค้นชื่อแบรนด์ในแผนที่แล้วเลือกร้านที่ใกล้เส้นทางวันนั้น ตรวจเวลาเปิดก่อนไป","-"],["หมวดผู้หญิงและผู้ชาย"],["10","IFC Mall (国金中心)","ห้างลักชัวรี่","ผู่ตง (ลู่เจียจุ่ย)","สูง","แบรนด์ลักชัวรี่และอิเล็กทรอนิกส์ ติดสถานี Metro","ห้างหรูในย่านลู่เจียจุ่ย แวะต่อกับสะพานลอยวงกลมและหอชมวิว (ข้อ 28 ในแท็บที่เที่ยวเด่น)","Waiting Hotel","18","Metro สาย 2 East Nanjing Rd → Lujiazui 1 สถานี","-"],["11","Li-Ning และ Anta (แบรนด์กีฬาจีน)","แบรนด์กีฬาจีน","ห้างทั่วเมือง","ประหยัด–กลาง","ราคาขึ้นกับรุ่น ตรวจป้ายในร้าน","เสื้อวอร์ม เสื้อกันหนาว รองเท้าผ้าใบดีไซน์สไตล์จีน เหมาะกับอากาศหนาวช่วงธ.ค.","-","-","ค้นสาขาใกล้โรงแรมหรือใกล้จุดเที่ยววันนั้นในแผนที่","-"],["12","ตลาดผ้าไซเอาท์บันด์ สั่งตัดสูทและชุดจีน (South Bund Fabric Market 南外滩轻纺面料市场)","ตลาดผ้า / ร้านตัด","หวงผู่ (ใต้เดอะบันด์)","ประหยัด–กลาง","ราคาขึ้นกับผ้าและช่าง ต้องต่อรอง ตกลงราคาและวันรับของก่อนวางมัดจำ","สั่งตัดสูท เสื้อเชิ้ต เสื้อโค้ท กี่เพ้า มักใช้เวลาประมาณ 3–7 วัน ควรไปวันแรกๆ ของทริปเพื่อเหลือเวลาแก้ไขก่อนกลับ","Waiting Hotel","25","Didi ประมาณ 20–25 นาที","-"],["หมวดตุ๊กตาและของสะสม"],["13","Pop Mart Global Flagship (HY Plaza, 288 East Nanjing Rd)","ร้านของสะสม","หวงผู่ (ถนนหนานจิงตะวันออก)","กลาง","ราคาตามรุ่น ตรวจป้ายในร้าน","สาขาเรือธงระดับโลก เปิดปี 2022 มีรุ่นลิมิเต็ดเฉพาะเซี่ยงไฮ้ตามไกด์ เช่น Labubu และ Molly","Waiting Hotel","8","เดินตามถนนหนานจิงตะวันออกจากโรงแรม","-"],["14","Pop Mart Shimao Festival City (829 East Nanjing Rd)","ร้านของสะสม","หวงผู่ (ถนนหนานจิงตะวันออก)","กลาง","ราคาตามรุ่น ตรวจป้ายในร้าน","สาขาเรือธงที่สองบนถนนหนานจิง ประมาณ 800 ตร.ม. 2 ชั้น เปิดปลายปี 2025","Waiting Hotel","15","เดินตามถนนหนานจิงตะวันออกไปทางจัตุรัสประชาชน","-"],["15","Jellycat ป๊อปอัปทางการ (Plaza 66 / Jing An Kerry Centre)","ป๊อปอัป","จิ้งอัน","กลาง–สูง","ตุ๊กตา Jellycat ในจีนประมาณ ¥180–800 ตามขนาด (ข้อมูลทั่วไป) รุ่นเอ็กซ์คลูซีฟเซี่ยงไฮ้ปี 2025 ราว ¥399–439","ข้อมูลล่าสุดที่พบ: เซี่ยงไฮ้ไม่มีร้าน Jellycat ถาวรอย่างเป็นทางการ ป๊อปอัปที่ Kerry Centre (2024) และ Plaza 66 (2025) จบไปแล้ว ตรวจ Mini Program ทางการของ Jellycat ว่ามีรอบใหม่ช่วง ธ.ค. หรือไม่","Waiting Hotel","18","Metro สาย 2 East Nanjing Rd → West Nanjing Rd 2 สถานี (Plaza 66)","-"],["16","Jellycat ร้านตัวแทน (Hamleys, Motherswork ฯลฯ)","ร้านตัวแทนจำหน่าย","หลายแห่ง (Ruihong Tiandi, Kerry Centre)","กลาง–สูง","ราคาอาจต่างจากร้านทางการ เทียบก่อนซื้อ","มีรายงานว่า Hamleys ที่ Ruihong Tiandi (瑞虹天地) และ Motherswork ที่ Jing An Kerry Centre วางขาย Jellycat ของอาจไม่ครบรุ่น ตรวจสต็อกก่อนไป","Mehood Bund","20","Didi ประมาณ 15–20 นาที (Ruihong Tiandi) ส่วน Kerry Centre ดูข้อ 4","-"],["หมวดของฝากและของใช้อื่นๆ"],["17","ตลาดหยูหยวน (Yuyuan Bazaar 豫园商城)","ของฝากสไตล์จีน","เมืองเก่า","ประหยัด–กลาง","ราคาแล้วแต่ร้าน ถามเทียบก่อนซื้อ","ของฝากสไตล์จีน พัดและงานฝีมือ ผ้าไหม ชุดชา เครื่องประดับเรียบง่าย","Waiting Hotel","20","Metro สาย 10 → Yuyuan Garden แล้วเดิน 5 นาที","วัน2"],["หมวดเครื่องสำอางและของที่คนไทยนิยมซื้อ (แบรนด์จีนมักถูกกว่าไทย)"],["18","แบรนด์เครื่องสำอางจีนที่ควรหา (ซื้อได้ที่ Harmay, WowColour, Sephora)","รายการแนะนำ","หลายร้าน","ประหยัด–กลาง","Judydoll ส่วนใหญ่ไม่เกิน ¥100 ต่อชิ้น (ตามบทความ Daxue) แบรนด์อื่นตรวจป้ายหน้าร้าน","Judydoll (อายแชโดว์ บลัช ลิปกลอส), Perfect Diary, Into You, Funny Elves และ First Cover (เน้นรองพื้นสำหรับผิวเอเชีย), Marie Dalgar, Florasis (ดีไซน์ลายจีน), Colorkey สกินแคร์ลองดู Proya ซึ่งมีรายงานว่าเป็นแบรนด์จีนที่ใหญ่ที่สุด","-","-","บางแบรนด์เริ่มวางขายในไทยแล้ว (เช่น Judydoll ที่ Beautrium) เทียบราคาในไทยก่อนซื้อจำนวนมาก","-"],["19","Harmay 话梅 (4 สาขา: Wukang Lu, Xintiandi, Panlong Tiandi, สนามบิน Hongqiao T2)","ร้านเครื่องสำอางมัลติแบรนด์","ลู่วาน / ซวีฮุย","กลาง","ราคาตามแบรนด์ มีทั้งแบรนด์จีนและต่างชาติ","ร้านสไตล์โกดัง เดินหยิบเลือกสนุก มีไซซ์ตัวอย่างให้ลองหลายตัว และแบรนด์เล็กๆ ที่หาในไทยไม่ได้ สาขา Wukang Lu ตรงเส้นทางวัน 3 (แถวอันฝูและอู่คัง) สาขาสนามบิน Hongqiao ใช้ซื้อก่อนบินกลับได้ถ้าออกจากหงเฉียว","Waiting Hotel","20","สาขา Xintiandi: Metro สาย 10 East Nanjing Rd → Xintiandi ประมาณ 3 สถานี","วัน3"],["20","WowColour 调色师 (หลายสาขาในห้าง)","ร้านเครื่องสำอางมัลติแบรนด์จีน","ห้างทั่วเมือง","กลาง","ราคาตามแบรนด์ ตรวจป้ายหน้าร้าน","รวมแบรนด์จีนทั้งเล็กและใหญ่ มีชั้นวางของ Flower Knows และ Judydoll (ตามบล็อกเกอร์ที่ไปสำรวจ) เหมาะหาลิปและบลัชสีแปลกๆ","-","-","ค้นชื่อ 调色师 ในแผนที่ แล้วเลือกสาขาที่ใกล้จุดที่ไปในวันนั้น","-"],["21","Sephora 丝芙兰 (สาขาในห้างทั่วเมือง)","ร้านเครื่องสำอางมัลติแบรนด์","ห้างทั่วเมือง","กลาง–สูง","แบรนด์ต่างชาติ (เช่น Dior, Chanel) ไม่รับประกันว่าถูกกว่าไทย แนะนำเน้นแบรนด์จีน","เพิ่มแบรนด์จีนหลายตัวตามข่าว Sephora China เช่น Florasis, Perfect Diary, Judydoll, Funny Elves, Into You ลองสีที่เคาน์เตอร์ได้","-","-","ค้นสาขาใกล้ที่พักหรือใกล้จุดที่ไปในแผนที่","-"],["22","Florasis 花西子 ร้านแบรนด์ (Grand Gateway 66, ซวีฮุย)","ร้านแบรนด์เครื่องสำอาง","ซวีฮุย","กลาง","ราคาตามสินค้า ตรวจป้ายหน้าร้าน","แบรนด์เครื่องสำอางจีนที่เน้นงานฝีมือและลวดลายจีน เปิดร้านใหม่ที่ Grand Gateway 66 ในปี 2025 เหมาะเป็นของฝาก แวะคู่กับมหาวิหารซวีเจียฮุย (ข้อ 29 แท็บที่เที่ยว)","Waiting Hotel","30","Metro สาย 2 → People's Square ต่อสาย 1 ไป Xujiahui","-"],[],["หมายเหตุ"],["(1) เวลาเดินทางเป็นค่าประมาณจากโรงแรมถึงที่หมาย ไม่รวมเวลารอรถและต่อคิว ช่วงเร่งด่วนหรือฝนตกอาจนานกว่านี้"],["(2) ราคาเป็นค่าประมาณจากแหล่งข้อมูลทั่วไป อาจเปลี่ยนตามฤดูกาลและโปรโมชัน ตรวจป้ายราคาก่อนซื้อ"],["(3) ร้านเปิดใหม่ ป๊อปอัป และสาขาของแบรนด์เปลี่ยนบ่อย ตรวจที่ตั้งและเวลาเปิดในแอปแผนที่ก่อนไป โดยเฉพาะ Jellycat"],["(4) ขอคืนภาษีได้เมื่อซื้อเกิน ¥500 ในร้านที่ร่วมโครงการ Tax-Free เก็บใบเสร็จและพาสปอร์ตไว้ขอคืนที่สนามบินตอนออก ตรวจเงื่อนไขล่าสุดก่อนซื้อ"],["(5) ร้านเล็กบางแห่งรับเฉพาะ Alipay หรือ WeChat Pay ไซซ์เสื้อผ้าแบรนด์จีนมักเล็กกว่าไซซ์สากล ควรลองก่อนซื้อ และไม่แนะนำตลาดที่ขายสินค้าเลียนแบบ"],["(6) ที่ถูกกว่าไทยโดยทั่วไปคือแบรนด์จีน (เครื่องสำอาง ของสะสม อิเล็กทรอนิกส์) ส่วนแบรนด์ต่างชาติไม่รับประกันว่าถูกกว่า ควรเทียบราคาในไทยก่อนซื้อ"],["(7) ของเหลวและครีมที่เกิน 100 มล. ต้องใส่กระเป๋าเช็คอิน ของที่ซื้อกลับไทยเกินวงเงินยกเว้นภาษีขาเข้าอาจต้องเสียภาษี ตรวจเกณฑ์ล่าสุดกับกรมศุลกากร"]]},{"title":"Eve / Wawa Wishlist or want to go","rows":[["Eve / Wawa Wishlist: ที่ใหม่ที่อยากไป (นอกลิสต์เดิม)"],["พิมพ์ชื่อที่ที่อยากไปในคอลัมน์ B แล้วติ๊กว่าใครอยากไป • คอลัมน์ C ใส่ชื่อค้นหาภาษาจีนหรืออังกฤษได้ เช่น 外滩 ช่วยให้ Amap เจอตรงขึ้น ถ้าเว้นว่างจะใช้ชื่อในคอลัมน์ B • คอลัมน์ D ใส่เมืองถ้าไม่ใช่เซี่ยงไฮ้ เช่น 苏州 ถ้าเว้นว่างจะค้นในเซี่ยงไฮ้ • ลิงก์ Amap สร้างให้อัตโนมัติจากชื่อที่พิมพ์"],["Eve เลือก 0 ที่  •  Wawa เลือก 0 ที่  •  ทั้งคู่อยากไป 0 ที่"],["#","สถานที่ที่อยากไป","ชื่อค้นหา Amap (จีน/อังกฤษ)","เมือง (ว่าง = เซี่ยงไฮ้)","Eve อยากไป","Wawa อยากไป","ใครอยากไป","หมายเหตุ (อยากไปเพราะอะไร / ขอให้อยู่วันไหน)","แผนที่ Amap"],["1","","","","FALSE","FALSE"],["2","","","","FALSE","FALSE"],["3","","","","FALSE","FALSE"],["4","","","","FALSE","FALSE"],["5","","","","FALSE","FALSE"],["6","","","","FALSE","FALSE"],["7","","","","FALSE","FALSE"],["8","","","","FALSE","FALSE"],["9","","","","FALSE","FALSE"],["10","","","","FALSE","FALSE"],["11","","","","FALSE","FALSE"],["12","","","","FALSE","FALSE"],["13","","","","FALSE","FALSE"],["14","","","","FALSE","FALSE"],["15","","","","FALSE","FALSE"],["16","","","","FALSE","FALSE"],["17","","","","FALSE","FALSE"],["18","","","","FALSE","FALSE"],["19","","","","FALSE","FALSE"],["20","","","","FALSE","FALSE"],["21","","","","FALSE","FALSE"],["22","","","","FALSE","FALSE"],["23","","","","FALSE","FALSE"],["24","","","","FALSE","FALSE"],["25","","","","FALSE","FALSE"],["26","","","","FALSE","FALSE"],["27","","","","FALSE","FALSE"],["28","","","","FALSE","FALSE"],["29","","","","FALSE","FALSE"],["30","","","","FALSE","FALSE"]]}];
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let tabs=SNAP,cur=0,sig=JSON.stringify(SNAP),RATE=4.6;
+const $=s=>document.querySelector(s);
+const nn=s=>parseFloat(String(s).replace(/,/g,""));
+const R=n=>Math.round(n*RATE).toLocaleString("en-US");
+const conv=s=>s.replace(/¥\s?CNY/g,"฿").replace(/\(¥\)/g,"(฿)").replace(/\(CNY\)/g,"(THB)")
+  .replace(/CNY\s?([\d,]+(?:\.\d+)?)/g,(_,a)=>"฿"+R(nn(a)))
+  .replace(/THB\s?([\d,]+(?:\.\d+)?)/g,(_,a)=>"฿"+Math.round(nn(a)).toLocaleString("en-US")).replace(/¥\s?([\d,]+(?:\.\d+)?)(?:\s?[–-]\s?¥?([\d,]+(?:\.\d+)?))?/g,(_,a,b)=>"฿"+R(nn(a))+(b?"–"+R(nn(b)):""));
+const esc=s=>conv(String(s??"")).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=s=>esc(s).replace(/\n/g,"<br>").replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">เปิดลิงก์</a>');
+const num=s=>{const n=parseFloat(String(s).replace(/[,¥]/g,""));return isNaN(n)?null:n};
 
-const FILTERS = [
-  {key:'all',label:'ทั้งหมด'},{key:'high_protein',label:'โปรตีนสูง'},{key:'low_cal',label:'แคลอรีต่ำ'},
-  {key:'low_carb',label:'คาร์บน้อย'},{key:'low_fat',label:'ไขมันต่ำ'},{key:'vegetable',label:'ผัก'},
-  {key:'fruit',label:'ผลไม้'},{key:'meat',label:'เนื้อสัตว์'},{key:'egg',label:'ไข่'},
-  {key:'dairy',label:'Dairy'},{key:'drink',label:'เครื่องดื่ม'},{key:'snack',label:'ขนม'}
-];
+const T0=Date.UTC(2026,11,24,6,35),T1=Date.UTC(2026,11,30,11,25),S0=Date.UTC(2026,9,20);
+const dayN=()=>Math.floor((Date.now()+7*36e5)/864e5)-Math.floor(Date.UTC(2026,11,24)/864e5)+1;
+const phase=()=>{const n=Date.now();return n<T0?0:n<=T1?1:2};
 
-const MEALS = [
-  {key:'breakfast',name:'มื้อเช้า',emoji:'🌅',share:0.28},
-  {key:'lunch',name:'มื้อกลางวัน',emoji:'☀️',share:0.35},
-  {key:'dinner',name:'มื้อเย็น',emoji:'🌙',share:0.27},
-  {key:'snack',name:'ของว่าง',emoji:'🍪',share:0.10}
-];
-
-/* ---- menu suggestion candidate pools ---- */
-const PROTEIN_IDS = ['chicken_breast','chicken_thigh','chicken_grilled','chicken_wing','chicken_ground','tuna','tilapia','salmon','beef','pork','tofu','egg','egg_white','greek_yogurt'];
-const CARB_IDS = ['rice_white','rice_brown','rice_berry','sweet_potato','oats'];
-const VEG_IDS = ['broccoli','carrot','cucumber','lettuce','tomato'];
-const LIGHT_SNACK_IDS = ['apple','banana','greek_yogurt','almonds','carrot','cucumber'];
-
-/* ---- exercise database: MET values ---- */
-const EXERCISE_DB = [
-  {id:'walk', name:'เดินเร็ว', emoji:'🚶', met:4.5},
-  {id:'jog', name:'วิ่งเหยาะ ๆ', emoji:'🏃', met:7},
-  {id:'run', name:'วิ่ง', emoji:'🏃‍♂️', met:9.8},
-  {id:'bike', name:'ปั่นจักรยาน', emoji:'🚴', met:7.5},
-  {id:'swim', name:'ว่ายน้ำ', emoji:'🏊', met:8},
-  {id:'weights', name:'เล่นเวท', emoji:'🏋️', met:5},
-  {id:'yoga', name:'โยคะ', emoji:'🧘', met:3},
-  {id:'aerobic', name:'แอโรบิก', emoji:'💃', met:6.5},
-  {id:'hiit', name:'HIIT', emoji:'🔥', met:8.5},
-  {id:'stairs', name:'เดินขึ้นบันได', emoji:'🪜', met:8.8},
-  {id:'badminton', name:'แบดมินตัน', emoji:'🏸', met:5.5},
-  {id:'football', name:'ฟุตบอล', emoji:'⚽', met:7},
-];
-function exerciseKcal(met, weightKg, minutes){
-  return met*3.5*weightKg/200*minutes;
+function split(rows){
+  const hi=rows.findIndex(r=>r.filter(Boolean).length>=3&&r.every(c=>!c||num(c)===null));
+  return hi<0?{pre:rows,head:null,body:[]}:{pre:rows.slice(0,hi),head:rows[hi],body:rows.slice(hi+1)};
 }
-
-/* ================= STATE / STORAGE ================= */
-const LS_KEY = 'nutri_tracker_v1';
-let state = loadState();
-let activeFilter = 'all';
-let activeFilterBrowse = 'all';
-let currentAddMeal = 'lunch';
-let qtyContext = null; // {food, mode:'add'|'again', prefillAmount}
-let selectedDateOffset = 0; // 0 = today
-
-function defaultState(){
-  return {
-    profile:null,
-    goals:null,
-    customFoods:[],
-    favorites:[],
-    logs:{},          // dateStr -> {breakfast:[],lunch:[],dinner:[],snack:[]}
-    water:{},         // dateStr -> ml
-    weightHistory:[], // {date, weight}
-    exerciseLogs:{},  // dateStr -> [{entryId,exId,name,minutes,kcal}]
-    theme:null,
-    lastMeal:'lunch'
+function view(t,idx){
+  const {pre,head,body}=split(t.rows);
+  const title=(pre[0]&&pre[0][0])||t.title,notes=pre.slice(1).map(r=>r.filter(Boolean).join(" · ")).filter(n=>n&&!/สีน้ำเงิน/.test(n));
+  const hd=`<header class="sec"><h2>${esc(title)}</h2>${notes.map(n=>`<p class="note">${fmt(n)}</p>`).join("")}</header>`;
+  if(!head)return hd;
+  if(head[0]==="วัน")return summary(body);
+  const k=head[0];
+  return hd+(k==="เวลา"?timeline(body):k==="ขา"?flights(head,body):k==="รายการ"&&head.length>=3?hotels(head,body):k==="รายการที่จองแล้ว"?budget(body):k==="เสร็จแล้ว"?checklist(body):(k==="#"&&head.some(x=>/โซน/.test(x))&&head.some(x=>/โรงแรมที่ใกล้สุด/.test(x)))?places(head,body):table(head,body));
+}
+function hero(){
+  const p=phase(),now=Date.now();
+  const f=Math.max(.02,Math.min(1,p===0?(now-S0)/(T0-S0):p===1?dayN()/7:1));
+  const sd=`--sd:-${((now%60000)/1000).toFixed(2)}s`;
+  return `<div class="hero rise" style="${sd}"><svg viewBox="0 0 236 236"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#7d848a"/></linearGradient></defs><circle class="rt" cx="118" cy="118" r="90"/><circle class="rp" cx="118" cy="118" r="90" style="--off:${565.5*(1-f)}"/><g class="hg" style="transform:rotate(${f*360}deg);transform-origin:118px 118px"><circle class="hdot" cx="118" cy="28" r="7"/></g><circle class="rb" cx="118" cy="118" r="76"/><circle class="rs" cx="118" cy="118" r="76"/><circle class="sdot" cx="118" cy="42" r="3.5"/></svg><i class="halo"></i><div class="mid"><b id="cdn">–</b><span id="cdl"></span></div></div><div class="hms" id="cd"></div>`;
+}
+function tick(){
+  const n=$("#cdn");if(!n)return;
+  const l=$("#cdl"),h=$("#cd"),now=Date.now(),p=phase();
+  if(p===0){
+    const d=T0-now,v=[Math.floor(d/864e5),Math.floor(d%864e5/36e5),Math.floor(d%36e5/6e4),Math.floor(d%6e4/1e3)];
+    n.textContent=Math.floor(d/864e5);l.textContent="วัน · ก่อนบิน";
+    h.innerHTML=v.map((x,i)=>`<span><b>${String(x).padStart(2,"0")}</b>${["วัน","ชม.","นาที","วินาที"][i]}</span>`).join("");
+  }else if(p===1){n.textContent=dayN();l.textContent="วันที่ (จาก 7)";h.innerHTML=""}
+  else{n.textContent="✓";l.textContent="จบทริปแล้ว";h.innerHTML=""}
+}
+function summary(b){
+  const days=b.filter(r=>/^\d+$/.test(r[0])),tot=b.find(r=>(r[0]||"").startsWith("รวมงบ"));
+  const rest=b.filter(r=>!days.includes(r)&&r!==tot).flat().filter(Boolean);
+  const max=Math.max(...days.map(r=>num(r[8])||0),1),cur_=phase()===1?dayN():0;
+  let o=hero()+`<div class="tiles rise" style="--i:2"><div class="tile"><small>ระยะเวลา</small><b>${days.length} วัน</b></div><div class="tile"><small>งบเที่ยว/กิน/เดินทาง (฿)</small><b data-count="${Math.round((num(tot&&tot[8])||0)*RATE)}">0</b></div></div>`;
+  o+=days.map((r,i)=>`<article class="card rise${cur_===+r[0]?" today":""}" style="--i:${i}"><button class="hd"><i>${esc(r[0])}</i><div><strong>${esc(r[2])}</strong><small>${esc(r[1])}</small></div><em>฿${R(num(r[8])||0)}</em></button><div class="bar"><u style="--w:${(num(r[8])||0)/max*100}%"></u></div><div class="more"><div><dl><dt>พักคืนนี้</dt><dd>${esc(r[3])}</dd><dt>ไฮไลต์</dt><dd>${esc(r[4])}</dd><dt>เดินทาง</dt><dd>${esc(r[5])}</dd><dt>ต้องทำ</dt><dd>${esc(r[6])}</dd></dl><a class="go" data-go="${esc(r[7])}">ดูรายละเอียดวันนี้ →</a></div></div></article>`).join("");
+  return o+rest.map(n=>`<p class="note">${fmt(n)}</p>`).join("");
+}
+function timeline(b){
+  let o='<ol class="tl">',i=0,tail="";
+  for(const r of b){
+    if(/^\d{1,2}:\d\d$/.test(r[0]||"")){
+      const c=num(r[4])?`<em>฿${R(num(r[4]))}</em>`:"";
+      o+=`<li class="rise" style="--i:${i++}"><time>${esc(r[0])}</time><div class="ev"><button class="hd"><strong>${esc(r[1])}</strong>${c}</button>${r[3]&&r[3]!=="-"?`<small>${esc(r[3])}</small>`:""}<div class="more"><div>${r[2]?`<p>${fmt(r[2])}</p>`:""}${r[5]?`<p class="note">${fmt(r[5])}</p>`:""}</div></div></div></li>`;
+    }else if((r[0]||"").startsWith("รวม"))tail+=`<div class="total"><span>รวมค่าใช้จ่ายโดยประมาณของวันนี้ (฿)</span><b data-count="${Math.round((num(r[4])||0)*RATE)}">0</b></div>`;
+    else if(r.some(Boolean))tail+=`<p class="note">${fmt(r.filter(Boolean).join(" "))}</p>`;
+  }
+  return o+"</ol>"+tail;
+}
+function table(h,b){
+  const keep=h.map((c,i)=>/¥|CNY/.test(c)?-1:i).filter(i=>i>=0);
+  let o="",i=0,flag=false;
+  const sec=x=>`<h3 class="sect">${fmt(x)}</h3>`;
+  for(let r of b){
+    const f=r.filter(Boolean);
+    if(!f.length)continue;
+    if(f.length===1&&r.length<=1){o+=sec(f[0]);continue}
+    if(r.length===3&&num(r[1])===null&&r.some(c=>/¥|CNY/.test(c))){flag=true;o+=sec(r[0]);continue}
+    if(flag&&r.length===3)r=[r[0],r[2]];
+    const k=r.indexOf("CNY");
+    if(k>0){r=[...r];r[k-1]=R(nn(r[k-1]));r[k]="THB"}
+    const c=keep.map(x=>({k:x,v:r[x]||""}));
+    const bi=c.length>1&&(/^\d{1,3}$/.test(c[0].v)||c[0].v.length<=1)?0:-1,ti=bi+1;
+    if(!c[ti]||!c[ti].v)continue;
+    const used=new Set([ti]);if(bi===0)used.add(0);
+    const chips=[];
+    c.forEach((x,j)=>{if(j<=ti||chips.length>=3)return;
+      if(x.v==="TRUE"){chips.push(esc(h[x.k])+" ✓");used.add(j)}
+      else if(x.v&&x.v!=="FALSE"&&x.v!=="-"&&x.v.length<=22){chips.push(esc(x.v));used.add(j)}});
+    const det=c.filter((x,j)=>!used.has(j)&&x.v&&x.v!=="FALSE"&&x.v!=="-");
+    const hd=`${bi===0?`<i>${esc(c[0].v)}</i>`:""}<div><strong>${esc(c[ti].v)}</strong>${chips.length?`<small>${chips.join(" · ")}</small>`:""}</div>`;
+    o+=`<article class="card cmp rise" style="--i:${Math.min(i++,14)}">`+(det.length?`<button class="hd">${hd}<s></s></button><div class="more"><div><dl>${det.map(x=>`<dt>${esc(h[x.k])}</dt><dd>${fmt(x.v)}</dd>`).join("")}</dl></div></div>`:`<div class="hd">${hd}</div>`)+"</article>";
+  }
+  return o||'<p class="note">ยังไม่มีรายการ เพิ่มได้ในชีทเลย</p>';
+}
+const B=x=>"฿"+Math.round(nn(String(x).replace(/[()]/g,""))||0).toLocaleString("en-US");
+function lst(o,buf){return buf?o+`<div class="card lst rise">${buf}</div>`:o}
+const sec3=t=>`<h3 class="sect">${esc(t)}</h3>`;
+function flights(h,b){
+  let o="",mode="f",buf="",i=0;
+  for(const r of b){
+    const f=r.filter(Boolean);if(!f.length)continue;
+    if(f.length===1&&r.length<=1){o=lst(o,buf);buf="";o+=`<p class="note">${fmt(f[0])}</p>`;continue}
+    if(r[0]==="ผู้โดยสาร"){o=lst(o,buf);buf="";mode="p";o+=sec3("ผู้โดยสาร & สัมภาระ");continue}
+    if(r[0]==="รายการราคา"){o=lst(o,buf);buf="";mode="$";o+=sec3("ราคาตั๋ว (บาท)");continue}
+    if(mode==="f")o+=`<article class="card fl rise" style="--i:${i++}"><div class="fh"><em>${esc(r[0])}</em><span>${esc(r[1])} · ${esc(r[2])}</span></div><div class="route"><div><b>${esc(r[4])}</b><small>${esc(r[3])}</small></div><div class="path"><u></u></div><div><b>${esc(r[6])}</b><small>${esc(r[5])}</small></div></div><p class="note">${esc([r[7],r[8],r[9]].filter(Boolean).join(" · "))}</p></article>`;
+    else if(mode==="p")o+=`<article class="card cmp open rise"><div class="hd"><div><strong>${esc(r[0])}</strong><small>ตั๋ว ${esc(r[1])}</small></div></div><div class="more"><div><dl><dt>กระเป๋าเช็คอิน</dt><dd>${esc(r[2])}</dd><dt>ถือขึ้นเครื่อง</dt><dd>${esc(r[3])}</dd></dl></div></div></article>`;
+    else buf+=`<div class="row${/^ราคารวม/.test(r[0])?" tot":""}"><span>${esc(r[0])}</span><b>${/^\(/.test(r[1])?"−":""}${B(r[1])}</b></div>`;
+  }
+  return lst(o,buf);
+}
+function hotels(h,b){
+  const rows=b.filter(r=>r.length>1);
+  const G=[["เวลา & ห้องพัก",["เวลาเช็คอิน","ประเภทห้อง","อาหาร","ผู้เข้าพัก"]],["ที่อยู่ & ติดต่อ",["ที่อยู่","โทรศัพท์"]],["เลขจอง",["จองผ่าน","เลขยืนยัน"]],["ยกเลิก & ข้อควรทำ",["นโยบายยกเลิก","ข้อควรทำ"]]];
+  const top=["เช็คอิน","เช็คเอาท์","จำนวนคืน","การชำระเงิน","ราคา"];
+  return h.slice(1).map((nm,jj)=>{
+    const j=jj+1,v=k=>(rows.find(r=>r[0]===k)||[])[j]||"";
+    const m=/^([①-⑩])\s*(.*)$/.exec(nm),bd=m?m[1]:String(j),title=m?m[2]:nm;
+    const pay=v("การชำระเงิน"),paid=/^ชำระแล้ว/.test(pay);
+    const gs=G.map(([t,ks])=>[t,rows.filter(r=>ks.some(k=>r[0].includes(k))&&r[j])]);
+    const oth=rows.filter(r=>!top.includes(r[0])&&!gs.some(g=>g[1].includes(r))&&r[j]);
+    if(oth.length)gs.push(["อื่นๆ",oth]);
+    return `<article class="card hot rise" style="--i:${jj}"><div class="hh"><i>${esc(bd)}</i><div><strong>${esc(title)}</strong><small>${esc(v("เช็คอิน"))} → ${esc(v("เช็คเอาท์"))} · ${esc(v("จำนวนคืน"))}</small></div><em>${esc(v("ราคา"))}</em></div>${pay?`<p class="pay ${paid?"paid":"due"}"><i></i><span>${esc(pay)}</span></p>`:""}`+gs.filter(g=>g[1].length).map(([t,rs])=>`<div class="grp"><button class="hd gh"><span>${t}</span><s></s></button><div class="more"><div><dl>${rs.map(r=>`<dt>${esc(r[0])}</dt><dd>${fmt(r[j])}</dd>`).join("")}</dl></div></div></div>`).join("")+"</article>";
+  }).join("");
+}
+function budget(b){
+  const T=k=>b.find(r=>(r[0]||"").startsWith(k)),tot=T("ประมาณการค่าใช้จ่ายรวม"),pp=T("เฉลี่ยต่อคน");
+  let o=tot?`<div class="tiles rise"><div class="tile"><small>ประมาณการรวมทั้งทริป (฿)</small><b data-count="${nn(tot[1])||0}">0</b></div><div class="tile"><small>เฉลี่ยต่อคน (฿)</small><b data-count="${pp?nn(pp[1])||0:0}">0</b></div></div>`:"";
+  let buf="",mode="b",nt="";
+  const sec=t=>{o=lst(o,buf);buf="";o+=sec3(t)};
+  sec("จองแล้ว (ตั๋วเครื่องบิน + ที่พัก)");
+  for(const r of b){
+    const f=r.filter(Boolean);if(!f.length||r===tot||r===pp)continue;
+    if(f.length===1&&r.length<=1){nt+=`<p class="note">${fmt(f[0])}</p>`;continue}
+    if(r.length===3&&num(r[1])===null&&/¥|CNY/.test(r.join())){sec("ค่าใช้จ่ายระหว่างทริป (ประมาณการ)");mode="t";continue}
+    if(/แปลงเป็น THB/.test(r[0]))continue;
+    const val=mode==="t"?(r[2]||R(nn(r[1]))):r[2]==="CNY"?R(nn(r[1])):r[1];
+    const sub=mode==="b"?[r[3],r[4]].filter(Boolean).join(" · "):"";
+    buf+=`<div class="row${/^รวม/.test(r[0])?" tot":""}"><div><span>${esc(r[0])}</span>${sub?`<small>${esc(sub)}</small>`:""}</div><b>${B(val)}</b></div>`;
+  }
+  return lst(o,buf)+nt;
+}
+function checklist(b){
+  const items=[],dls=[];let mode="i";
+  for(const r of b){
+    if(!r.some(Boolean))continue;
+    if(mode==="i"&&!r[0]){mode="d";continue}
+    (mode==="i"?items:dls).push(r);
+  }
+  const dn=r=>r[0]&&!/⬜|FALSE/.test(r[0]),done=items.filter(dn).length,pct=items.length?done/items.length*100:0;
+  let o=`<div class="rise"><div class="bar big"><u style="--w:${pct}%"></u></div><p class="note">เตรียมพร้อมแล้ว ${done} จาก ${items.length} รายการ</p></div><div class="card lst rise">`;
+  o+=items.map(r=>`<div class="it"><button class="hd"><span class="box${dn(r)?" on":""}"></span><div><strong>${esc(r[1])}</strong>${r[3]?`<small>${esc(r[3])}</small>`:""}</div><s></s></button><div class="more"><div><p class="note">${fmt(r[2]||"")}</p></div></div></div>`).join("")+"</div>";
+  if(dls.length)o+=sec3("กำหนดยกเลิกฟรี (ห้ามพลาด)")+`<div class="card lst rise">`+dls.map(r=>`<div class="row"><div><span>${esc(r[1])}</span><small>${esc(r[2]||"")}</small></div><b class="dd">${esc(r[3]||"")}</b></div>`).join("")+"</div>";
+  return o;
+}
+function places(h,b){
+  const ix=re=>h.findIndex(x=>re.test(x));
+  const I={n:ix(/สถานที่|ร้าน/),t:ix(/ประเภท/),z:ix(/โซน/),p:ix(/ค่าเข้า|ระดับราคา/),pd:ix(/รายละเอียด(ค่าเข้า|ราคา)/),hi:ix(/ไฮไลต์/),ho:ix(/โรงแรม/),mi:ix(/เวลา/),wy:ix(/ไปยังไง/),pl:ix(/แผนวันที่/)};
+  const g=(r,k)=>(k>=0&&r[k]&&r[k]!=="-")?r[k]:"";
+  const card=(r,i)=>{
+    const sub=[g(r,I.t),g(r,I.z)].filter(Boolean).join(" · "),ch=[];
+    if(g(r,I.p))ch.push(g(r,I.p));
+    if(g(r,I.pl))ch.push("ในแผน "+g(r,I.pl));
+    if(g(r,I.ho)&&g(r,I.mi))ch.push(`ใกล้ ${g(r,I.ho)} ~${g(r,I.mi)} นาที`);
+    const det=[["ไฮไลต์",g(r,I.hi)],["ค่าใช้จ่าย",g(r,I.pd)],["วิธีไป",g(r,I.wy)]].filter(x=>x[1]);
+    const hd=`<i>${esc(r[0])}</i><div><strong>${esc(r[I.n])}</strong>${sub?`<small>${esc(sub)}</small>`:""}${ch.length?`<small class="chips">${ch.map(x=>`<span>${esc(x)}</span>`).join("")}</small>`:""}</div>`;
+    return `<article class="card cmp rise" style="--i:${Math.min(i,14)}">`+(det.length?`<button class="hd">${hd}<s></s></button><div class="more"><div><dl>${det.map(x=>`<dt>${x[0]}</dt><dd>${fmt(x[1])}</dd>`).join("")}</dl></div></div>`:`<div class="hd">${hd}</div>`)+"</article>";
   };
-}
-function loadState(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return defaultState();
-    const parsed = JSON.parse(raw);
-    return Object.assign(defaultState(), parsed);
-  }catch(e){ return defaultState(); }
-}
-function saveState(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ console.error('save failed', e); }
-}
-function todayStr(offset){
-  offset = offset||0;
-  const d = new Date();
-  d.setDate(d.getDate()+offset);
-  return d.toISOString().slice(0,10);
-}
-function currentDateStr(){ return todayStr(selectedDateOffset); }
-function ensureDay(dateStr){
-  if(!state.logs[dateStr]) state.logs[dateStr] = {breakfast:[],lunch:[],dinner:[],snack:[]};
-  return state.logs[dateStr];
-}
-function ensureExerciseDay(dateStr){
-  if(!state.exerciseLogs[dateStr]) state.exerciseLogs[dateStr] = [];
-  return state.exerciseLogs[dateStr];
-}
-function totalBurned(dateStr){
-  return ensureExerciseDay(dateStr).reduce((s,e)=>s+e.kcal,0);
-}
-function allFoods(){ return FOOD_DB.concat(state.customFoods); }
-function findFood(id){ return allFoods().find(f=>f.id===id); }
-
-/* ================= TOAST ================= */
-let toastTimer=null;
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
-}
-
-/* ================= ONBOARDING ================= */
-let obStep = 0;
-const obTotalSteps = 6;
-let obData = {gender:null, activity:null, goal:null};
-function renderObProgress(){
-  const el = document.getElementById('obProgress');
-  el.innerHTML='';
-  for(let i=0;i<obTotalSteps;i++){
-    const d=document.createElement('div');
-    if(i<=obStep) d.classList.add('done');
-    el.appendChild(d);
+  const all=[];let nm=false;
+  for(const r of b){
+    const f=r.filter(Boolean);if(!f.length)continue;
+    if(f.length===1&&r.length<=1){if(/^หมายเหตุ/.test(f[0]))nm=true;all.push({s:f[0],nm});continue}
+    all.push({r});
   }
+  const rs=all.filter(x=>x.r),hasSec=all.some(x=>x.s&&!x.nm);
+  let o="",i=0;
+  if(!hasSec&&I.pl>=0){
+    const a=rs.filter(x=>g(x.r,I.pl)),c=rs.filter(x=>!g(x.r,I.pl));
+    if(a.length)o+=sec3("อยู่ในแผนทริป")+a.map(x=>card(x.r,i++)).join("");
+    if(c.length)o+=sec3("ที่อื่นๆ ที่น่าไป")+c.map(x=>card(x.r,i++)).join("");
+    o+=all.filter(x=>x.s).map(x=>`<p class="note">${fmt(x.s)}</p>`).join("");
+  }else all.forEach(x=>{o+=x.r?card(x.r,i++):x.nm?`<p class="note">${fmt(x.s)}</p>`:`<h3 class="sect">${fmt(x.s)}</h3>`});
+  return o;
 }
-function showObStep(i){
-  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
-  document.querySelector('.ob-step[data-step="'+i+'"]').classList.add('active');
-  renderObProgress();
-  if(i===5) buildGoalPreview();
-}
-function obNext(){
-  if(obStep===1 && !obData.gender){ showToast('กรุณาเลือกเพศ'); return; }
-  if(obStep===2){
-    const age=+document.getElementById('obAge').value, h=+document.getElementById('obHeight').value,
-          w=+document.getElementById('obWeight').value, wg=+document.getElementById('obWeightGoal').value;
-    if(!age||!h||!w||!wg){ showToast('กรุณากรอกข้อมูลให้ครบ'); return; }
-    obData.age=age; obData.height=h; obData.weight=w; obData.weightGoal=wg;
-  }
-  if(obStep===3 && !obData.activity){ showToast('กรุณาเลือกระดับกิจกรรม'); return; }
-  if(obStep===4 && !obData.goal){ showToast('กรุณาเลือกเป้าหมาย'); return; }
-  if(obStep<obTotalSteps-1){ obStep++; showObStep(obStep); }
-}
-function obPrev(){ if(obStep>0){ obStep--; showObStep(obStep); } }
-function obPick(field,val,el){
-  obData[field]=val;
-  el.parentElement.querySelectorAll('.optbtn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-}
-function calcBMR(gender,w,h,age){
-  return gender==='male' ? (10*w+6.25*h-5*age+5) : (10*w+6.25*h-5*age-161);
-}
-function computeGoals(profile){
-  const bmr = calcBMR(profile.gender, profile.weight, profile.height, profile.age);
-  const tdee = bmr * profile.activity;
-  let cal;
-  if(profile.goal==='lose') cal = tdee - 500;
-  else if(profile.goal==='gain') cal = tdee + 350;
-  else cal = tdee;
-  cal = Math.max(1200, Math.round(cal/10)*10);
-  const protein = Math.round((cal*0.30)/4);
-  const fat = Math.round((cal*0.25)/9);
-  const carbs = Math.round((cal - protein*4 - fat*9)/4);
-  return {calories:cal, protein, carbs, fat};
-}
-function buildGoalPreview(){
-  const profile = {gender:obData.gender, age:obData.age, height:obData.height, weight:obData.weight, activity:+obData.activity, goal:obData.goal};
-  const g = computeGoals(profile);
-  obData._goals = g;
-  document.getElementById('obGoalPreview').innerHTML = `
-    <div class="row"><span>น้ำหนักปัจจุบัน</span><span>${profile.weight} kg</span></div>
-    <div class="row"><span>น้ำหนักเป้าหมาย</span><span>${obData.weightGoal} kg</span></div>
-    <div class="row total"><span>เหลืออีก</span><span>${Math.abs(obData.weightGoal-profile.weight).toFixed(1)} kg</span></div>
-    <div class="row" style="margin-top:10px;"><span>🔥 Calories (ค่าประมาณ)</span><span>${g.calories} kcal</span></div>
-    <div class="row"><span>💪 Protein</span><span>${g.protein} g</span></div>
-    <div class="row"><span>🍚 Carbs</span><span>${g.carbs} g</span></div>
-    <div class="row"><span>🥑 Fat</span><span>${g.fat} g</span></div>
-  `;
-}
-function finishOnboarding(){
-  state.profile = {
-    gender:obData.gender, age:obData.age, height:obData.height,
-    weight:obData.weight, weightGoal:obData.weightGoal,
-    activity:+obData.activity, goal:obData.goal
-  };
-  state.goals = obData._goals;
-  state.weightHistory = [{date:todayStr(0), weight:obData.weight}];
-  saveState();
-  document.getElementById('onboarding').style.display='none';
-  document.getElementById('app').style.display='block';
-  initApp();
-}
-
-/* ================= VIEW SWITCHING ================= */
-function showView(name){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  document.querySelectorAll('.navbtn[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
-  if(name==='home') renderHome();
-  if(name==='foods') renderFoodsBrowse();
-  if(name==='progress') renderProgress();
-  if(name==='settings') renderSettings();
-  window.scrollTo(0,0);
-}
-
-/* ================= HOME / DASHBOARD ================= */
-const dayFmt = new Intl.DateTimeFormat('th-TH',{weekday:'long', day:'numeric', month:'long'});
-function renderHome(){
-  const ds = currentDateStr();
-  document.getElementById('homeDate').textContent = dayFmt.format(new Date(ds+'T00:00:00'));
-  const day = ensureDay(ds);
-  const totals = {kcal:0,p:0,c:0,f:0,fiber:0};
-  MEALS.forEach(m=> day[m.key].forEach(item=>{ totals.kcal+=item.kcal; totals.p+=item.p; totals.c+=item.c; totals.f+=item.f; totals.fiber+=item.fiber||0; }));
-
-  const goals = state.goals || {calories:2000,protein:100,carbs:250,fat:70};
-  const burned = totalBurned(ds);
-  const adjGoal = goals.calories + burned;
-  const pct = Math.min(100, (totals.kcal/adjGoal)*100 || 0);
-  const circumference = 2*Math.PI*86;
-  document.getElementById('ringFill').setAttribute('stroke-dasharray', circumference.toFixed(1));
-  document.getElementById('ringFill').setAttribute('stroke-dashoffset', (circumference*(1-pct/100)).toFixed(1));
-  document.getElementById('kcalEaten').textContent = Math.round(totals.kcal);
-  document.getElementById('kcalGoalDisp').textContent = Math.round(adjGoal) + (burned>0 ? ' *' : '');
-  document.getElementById('kcalLeftDisp').textContent = Math.max(0, Math.round(adjGoal-totals.kcal));
-
-  setMacroBar('Protein', totals.p, goals.protein, '--protein');
-  setMacroBar('Carbs', totals.c, goals.carbs, '--carbs');
-  setMacroBar('Fat', totals.f, goals.fat, '--fat');
-
-  renderExerciseCard(ds, burned);
-
-  // insight
-  const kcalLeft = adjGoal-totals.kcal;
-  const proteinLeft = goals.protein-totals.p;
-  let insight;
-  if(totals.kcal===0){
-    insight = 'เริ่มบันทึกมื้อแรกของวันนี้ได้เลย';
-  } else if(kcalLeft<0){
-    insight = 'วันนี้กินเกินเป้าหมายไปแล้วเล็กน้อย พรุ่งนี้เริ่มใหม่ได้เสมอ';
-  } else if(proteinLeft>0){
-    insight = `วันนี้โปรตีนของคุณยังเหลืออีก ${Math.round(proteinLeft)} g และเหลือแคลอรีอีกประมาณ ${Math.round(kcalLeft)} kcal`;
-  } else {
-    insight = `เหลืออีกประมาณ ${Math.round(kcalLeft)} kcal สำหรับวันนี้ ลองเลือกของว่างแคลอรีต่ำได้`;
-  }
-  document.getElementById('insightCard').innerHTML = `<div class="insight">${insight}</div>`;
-
-  // water
-  const waterGoal = state.profile && state.profile.waterGoalOverride ? state.profile.waterGoalOverride : 2500;
-  const waterCur = state.water[ds]||0;
-  document.getElementById('waterCur').textContent = waterCur;
-  document.getElementById('waterGoal').textContent = waterGoal;
-
-  renderMeals(day);
-}
-function renderExerciseCard(ds, burned){
-  document.getElementById('burnedNote').style.display = burned>0 ? 'block' : 'none';
-  const list = ensureExerciseDay(ds);
-  const el = document.getElementById('exerciseCard');
-  if(list.length===0){
-    el.innerHTML = `<div class="empty-hint">ยังไม่ได้บันทึกการออกกำลังกายวันนี้ — เผาผลาญเพิ่มเพื่อเพิ่มโควตาแคลอรี</div>`;
-    return;
-  }
-  el.innerHTML = `<div class="meal-items">` + list.map(e=>`
-    <div class="food-row">
-      <div><div class="fname">${e.emoji} ${escapeHtml(e.name)}</div><div class="famt">${e.minutes} นาที</div></div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="fkcal">-${Math.round(e.kcal)} kcal</span>
-        <button class="food-row-del" onclick="deleteExercise('${e.entryId}')">✕</button>
-      </div>
-    </div>`).join('') + `</div>`;
-}
-function setMacroBar(label, cur, goal, cssvar){
-  const id = label.toLowerCase();
-  const pct = Math.min(100, goal? (cur/goal)*100 : 0);
-  document.getElementById('macro'+label+'Bar').style.width = pct+'%';
-  document.getElementById('macro'+label+'Txt').textContent = `${Math.round(cur)} / ${Math.round(goal)} g`;
-}
-function renderMeals(day){
-  const wrap = document.getElementById('mealsContainer');
-  wrap.innerHTML='';
-  MEALS.forEach(m=>{
-    const items = day[m.key];
-    const kcal = items.reduce((s,i)=>s+i.kcal,0);
-    const card = document.createElement('div');
-    card.className='card meal-card';
-    let itemsHtml = '';
-    if(items.length===0){
-      itemsHtml = `<div class="empty-hint">ยังไม่มีรายการอาหารในมื้อนี้</div>`;
-    } else {
-      itemsHtml = '<div class="meal-items">' + items.map(it=>`
-        <div class="food-row">
-          <button class="food-row-btn" onclick="editLoggedItem('${m.key}','${it.entryId}')">
-            <div><div class="fname">${escapeHtml(it.name)}</div><div class="famt">${formatAmount(it)}</div></div>
-          </button>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span class="fkcal">${Math.round(it.kcal)} kcal</span>
-            <button class="food-row-del" onclick="deleteLoggedItem('${m.key}','${it.entryId}')">✕</button>
-          </div>
-        </div>`).join('') + '</div>';
-    }
-    card.innerHTML = `
-      <div class="meal-head" onclick="openMealDetail('${m.key}')">
-        <div class="left"><span class="emoji">${m.emoji}</span><div><div class="name">${m.name}</div><div class="kcal">${Math.round(kcal)} kcal</div></div></div>
-        <div style="display:flex;align-items:center;gap:8px;" onclick="event.stopPropagation();">
-          <button class="again-btn" onclick="openMealSuggestion('${m.key}')">✨ แนะนำ</button>
-          <button class="meal-add" onclick="openAddFood('${m.key}')">+</button>
-        </div>
-      </div>
-      ${itemsHtml}
-    `;
-    wrap.appendChild(card);
+function counts(root){
+  root.querySelectorAll("[data-count]").forEach(e=>{
+    const v=+e.dataset.count,t0=performance.now();
+    if(RM){e.textContent=v.toLocaleString();return}
+    (function f(t){const p=Math.min(1,(t-t0)/1100);e.textContent=Math.round(v*(1-Math.pow(1-p,3))).toLocaleString();if(p<1)requestAnimationFrame(f)})(t0);
   });
 }
-function formatAmount(it){
-  return `${it.amount % 1 === 0 ? it.amount : it.amount.toFixed(1)} ${it.unitLabel}`;
-}
-function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-
-/* ================= WATER ================= */
-function addWater(ml){
-  const ds = currentDateStr();
-  state.water[ds] = (state.water[ds]||0)+ml;
-  saveState();
-  renderHome();
-  showToast(`เพิ่มน้ำ ${ml} ml แล้ว`);
-}
-
-/* ================= EXERCISE ================= */
-let exSelectedId = 'walk';
-function openExerciseSheet(){
-  exSelectedId = 'walk';
-  document.getElementById('exMinutes').value = 30;
-  buildExerciseChips();
-  exRecalc();
-  openSheet('exerciseOverlay');
-}
-function buildExerciseChips(){
-  const el = document.getElementById('exerciseChips');
-  el.innerHTML = EXERCISE_DB.map(e=>`<button class="chip ${e.id===exSelectedId?'sel':''}" data-id="${e.id}">${e.emoji} ${e.name}</button>`).join('');
-  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
-    exSelectedId = c.dataset.id;
-    el.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
-    c.classList.add('sel');
-    exRecalc();
-  });
-}
-function exStepMinutes(dir){
-  const input = document.getElementById('exMinutes');
-  let v = Math.max(0, (parseInt(input.value)||0) + dir);
-  input.value = v;
-  exRecalc();
-}
-function exRecalc(){
-  const ex = EXERCISE_DB.find(e=>e.id===exSelectedId);
-  const minutes = parseFloat(document.getElementById('exMinutes').value)||0;
-  const weight = (state.profile && state.profile.weight) || 65;
-  const kcal = exerciseKcal(ex.met, weight, minutes);
-  document.getElementById('exKcal').textContent = Math.round(kcal);
-}
-function confirmAddExercise(){
-  const ex = EXERCISE_DB.find(e=>e.id===exSelectedId);
-  const minutes = parseFloat(document.getElementById('exMinutes').value)||0;
-  if(minutes<=0){ showToast('กรุณาระบุระยะเวลา'); return; }
-  const weight = (state.profile && state.profile.weight) || 65;
-  const kcal = exerciseKcal(ex.met, weight, minutes);
-  const ds = currentDateStr();
-  ensureExerciseDay(ds).push({entryId:'x'+Date.now(), exId:ex.id, name:ex.name, emoji:ex.emoji, minutes, kcal});
-  saveState();
-  closeSheet('exerciseOverlay');
-  showToast(`${ex.name} ${minutes} นาที เผาผลาญ ${Math.round(kcal)} kcal`);
-  renderHome();
-}
-function deleteExercise(entryId){
-  const ds = currentDateStr();
-  state.exerciseLogs[ds] = ensureExerciseDay(ds).filter(e=>e.entryId!==entryId);
-  saveState();
-  renderHome();
-}
-
-/* ================= MENU SUGGESTION ================= */
-let suggestState = null; // {mealKey, items, usedIds}
-function mealBudget(mealKey){
-  const m = MEALS.find(x=>x.key===mealKey);
-  const goals = state.goals;
-  const day = ensureDay(currentDateStr());
-  const already = day[mealKey].reduce((s,i)=>({kcal:s.kcal+i.kcal,p:s.p+i.p}), {kcal:0,p:0});
-  return {
-    kcal: m.share*goals.calories - already.kcal,
-    protein: m.share*goals.protein - already.p
-  };
-}
-function pickRandom(ids, exclude){
-  const pool = ids.filter(id=>!exclude.includes(id));
-  const usable = pool.length ? pool : ids;
-  return findFood(usable[Math.floor(Math.random()*usable.length)]);
-}
-function suggestMealCombo(mealKey, excludeIds){
-  excludeIds = excludeIds || [];
-  const budget = mealBudget(mealKey);
-  if(budget.kcal < 120){
-    const snack = pickRandom(LIGHT_SNACK_IDS, excludeIds);
-    const amt = snack.base;
-    return {light:true, items:[{food:snack, amount:amt}]};
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{rootMargin:"0px 0px -6% 0px"});
+function render(anim){
+  for(const t of tabs){const r=t.rows.find(x=>(x[0]||"").startsWith("อัตราแลกเปลี่ยน"));if(r&&num(r[1]))RATE=num(r[1])}
+  const head=((tabs[0]&&tabs[0].rows[0]&&tabs[0].rows[0][0])||"ทริปเซี่ยงไฮ้").split(" — ");
+  const tt=head[0],mm=/^(.*?)\s+(\d[^()]*?\d{4})\s*(?:\((.*)\))?\s*$/.exec(tt),kk=head.join("|"),tp=$("#top");
+  if(tp.dataset.k!==kk){tp.dataset.k=kk;
+    const names=(head[1]||"").split(/\s*&\s*/).filter(Boolean);
+    tp.innerHTML=(mm?`<div class="eb">TRIP · ${esc(mm[2].slice(-4))}</div>`:"")+`<h1>${esc(mm?mm[1]:tt)}</h1>`+(mm?`<div class="dt"><b>${esc(mm[2])}</b>${mm[3]?`<span class="pill">${esc(mm[3])}</span>`:""}</div>`:"")+(names.length?`<div class="ppl">${names.map(n=>`<span class="pp"><i>${esc(n[0].toUpperCase())}</i>${esc(n.split(" ")[0])}</span>`).join("")}</div>`:"");
   }
-  const proteinFood = pickRandom(PROTEIN_IDS, excludeIds);
-  let proteinAmt = budget.protein>0 ? (budget.protein/proteinFood.p)*proteinFood.base : proteinFood.base;
-  proteinAmt = Math.min(250, Math.max(50, Math.round(proteinAmt/10)*10));
-  const proteinKcal = proteinFood.kcal*proteinAmt/proteinFood.base;
-
-  const vegFood = pickRandom(VEG_IDS, excludeIds);
-  const vegAmt = 100;
-  const vegKcal = vegFood.kcal*vegAmt/vegFood.base;
-
-  const carbFood = pickRandom(CARB_IDS, excludeIds);
-  let remainingKcal = budget.kcal - proteinKcal - vegKcal;
-  let carbAmt = remainingKcal>0 ? (remainingKcal/carbFood.kcal)*carbFood.base : 0;
-  carbAmt = Math.min(250, Math.max(0, Math.round(carbAmt/10)*10));
-
-  const items = [{food:proteinFood, amount:proteinAmt}, {food:vegFood, amount:vegAmt}];
-  if(carbAmt>=20) items.push({food:carbFood, amount:carbAmt});
-  return {light:false, items};
+  const bar=$("#tabs");
+  bar.innerHTML=tabs.map((t,i)=>`<button data-i="${i}" class="${i===cur?"on":""}">${esc(t.title)}</button>`).join("");
+  const on=bar.querySelector(".on");
+  if(on)bar.scrollTo({left:on.offsetLeft-bar.clientWidth/2+on.clientWidth/2,behavior:anim?"smooth":"auto"});
+  const m=$("#main");m.classList.toggle("static",!anim);
+  m.innerHTML=view(tabs[cur],cur);
+  m.querySelectorAll(".rise").forEach(e=>io.observe(e));
+  counts(m);tick();
 }
-function openMealSuggestion(mealKey){
-  const m = MEALS.find(x=>x.key===mealKey);
-  document.getElementById('suggestMealName').textContent = 'แนะนำเมนู'+m.name;
-  suggestState = {mealKey, combo:suggestMealCombo(mealKey, [])};
-  renderSuggestion();
-  openSheet('suggestOverlay');
-}
-function shuffleSuggestion(){
-  const usedIds = suggestState.combo.items.map(i=>i.food.id);
-  suggestState.combo = suggestMealCombo(suggestState.mealKey, usedIds);
-  renderSuggestion();
-}
-function renderSuggestion(){
-  const combo = suggestState.combo;
-  const totals = combo.items.reduce((s,it)=>{
-    const r = it.amount/it.food.base;
-    return {kcal:s.kcal+it.food.kcal*r, p:s.p+it.food.p*r, c:s.c+it.food.c*r, f:s.f+it.food.f*r};
-  }, {kcal:0,p:0,c:0,f:0});
-  const itemsHtml = combo.items.map(it=>`
-    <div class="food-row">
-      <div><div class="fname">${foodEmoji(it.food)} ${escapeHtml(it.food.name)}</div><div class="famt">${it.amount} ${it.food.unitLabel}</div></div>
-      <span class="fkcal">${Math.round(it.food.kcal*it.amount/it.food.base)} kcal</span>
-    </div>`).join('');
-  const noteHtml = combo.light
-    ? `<div class="insight" style="margin-bottom:14px;">มื้อนี้ใกล้เป้าหมายแล้ว ลองเลือกของว่างเบา ๆ แทน</div>`
-    : `<div class="empty-hint" style="margin-bottom:8px;">คำนวณจากแคลอรีและโปรตีนที่เหลือของมื้อนี้ เป็นคำแนะนำเบื้องต้นเท่านั้น</div>`;
-  document.getElementById('suggestBody').innerHTML = `
-    ${noteHtml}
-    <div class="meal-items">${itemsHtml}</div>
-    <div class="qty-result" style="margin-top:16px;">
-      <div class="qr-item"><div class="qr-v num">${Math.round(totals.kcal)}</div><div class="qr-l">kcal</div></div>
-      <div class="qr-item"><div class="qr-v num">${round1(totals.p)}</div><div class="qr-l">Protein</div></div>
-      <div class="qr-item"><div class="qr-v num">${round1(totals.c)}</div><div class="qr-l">Carbs</div></div>
-      <div class="qr-item"><div class="qr-v num">${round1(totals.f)}</div><div class="qr-l">Fat</div></div>
-    </div>
-    <button class="btn-primary" onclick="addSuggestedCombo()">เพิ่มเมนูนี้ทั้งหมด</button>
-    <button class="btn-secondary" onclick="shuffleSuggestion()">🔀 สุ่มเมนูใหม่</button>
-  `;
-}
-function addSuggestedCombo(){
-  const day = ensureDay(currentDateStr());
-  suggestState.combo.items.forEach(it=>{
-    day[suggestState.mealKey].push(buildLogEntry(it.food, it.amount));
-  });
-  saveState();
-  closeSheet('suggestOverlay');
-  showToast('เพิ่มเมนูแนะนำแล้ว');
-  renderHome();
-}
-
-/* ================= ADD FOOD VIEW ================= */
-function buildMealTabs(){
-  const el = document.getElementById('mealTabs');
-  el.innerHTML = MEALS.map(m=>`<button class="meal-tab ${m.key===currentAddMeal?'sel':''}" onclick="selectAddMeal('${m.key}')">${m.emoji} ${m.name}</button>`).join('');
-  document.getElementById('addFoodTitle').textContent = 'คุณกำลังเพิ่มอาหารให้'+MEALS.find(m=>m.key===currentAddMeal).name;
-}
-function selectAddMeal(key){
-  currentAddMeal = key;
-  state.lastMeal = key;
-  saveState();
-  buildMealTabs();
-}
-function openAddFood(mealKey){
-  currentAddMeal = mealKey || state.lastMeal || 'lunch';
-  document.getElementById('foodSearch').value='';
-  activeFilter='all';
-  buildMealTabs();
-  buildFilterChips('filterChips', activeFilter, (k)=>{activeFilter=k; renderFoodList();});
-  renderFavRow();
-  renderRecentList();
-  renderFoodList();
-  showView('add');
-}
-function buildFilterChips(containerId, active, onPick){
-  const el = document.getElementById(containerId);
-  el.innerHTML = FILTERS.map(f=>`<button class="chip ${f.key===active?'sel':''}" data-k="${f.key}">${f.label}</button>`).join('');
-  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
-    el.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
-    c.classList.add('sel');
-    onPick(c.dataset.k);
-  });
-}
-function matchesSearch(food, q){
-  if(!q) return true;
-  q=q.trim().toLowerCase();
-  return food.name.toLowerCase().includes(q) || (food.en&&food.en.toLowerCase().includes(q));
-}
-function matchesFilter(food, key){
-  if(key==='all') return true;
-  return food.tags && food.tags.includes(key);
-}
-function foodEmoji(food){
-  if(food.tags && food.tags.includes('fruit')) return '🍎';
-  if(food.tags && food.tags.includes('vegetable')) return '🥦';
-  if(food.tags && food.tags.includes('meat')) return '🍗';
-  if(food.tags && food.tags.includes('egg')) return '🥚';
-  if(food.tags && food.tags.includes('dairy')) return '🥛';
-  if(food.tags && food.tags.includes('drink')) return '☕';
-  if(food.tags && food.tags.includes('snack')) return '🥜';
-  return '🍽';
-}
-function renderFoodList(){
-  const q = document.getElementById('foodSearch').value;
-  const list = allFoods().filter(f=>matchesSearch(f,q) && matchesFilter(f,activeFilter));
-  const el = document.getElementById('foodList');
-  if(list.length===0){ el.innerHTML = `<div class="empty-hint" style="text-align:center;padding:20px;">ไม่พบอาหารที่ค้นหา</div>`; return; }
-  el.innerHTML = list.map(f=>foodCardHtml(f)).join('');
-}
-function foodCardHtml(f){
-  const isFav = state.favorites.includes(f.id);
-  return `<button class="foodcard" onclick="openQtySheet('${f.id}')">
-    <div class="fc-left">
-      <div class="fc-name">${foodEmoji(f)} ${escapeHtml(f.name)}</div>
-      <div class="fc-meta">ต่อ ${f.base} ${f.unitLabel} · ${f.kcal} kcal</div>
-      <div class="fc-macros">P ${f.p}g · C ${f.c}g · F ${f.f}g</div>
-    </div>
-    <div class="fc-right">
-      <span class="heart-btn ${isFav?'on':''}" onclick="event.stopPropagation();toggleFavorite('${f.id}')">${isFav?'♥':'♡'}</span>
-      <span class="add-round">+</span>
-    </div>
-  </button>`;
-}
-function toggleFavorite(id){
-  const idx = state.favorites.indexOf(id);
-  if(idx>=0) state.favorites.splice(idx,1); else state.favorites.push(id);
-  saveState();
-  renderFoodList(); renderFavRow(); renderFoodsBrowse();
-}
-function renderFavRow(){
-  const el = document.getElementById('favRow');
-  const foods = state.favorites.map(id=>findFood(id)).filter(Boolean);
-  document.getElementById('favSection').style.display = foods.length? 'block':'none';
-  el.innerHTML = foods.map(f=>`<button class="favchip" onclick="openQtySheet('${f.id}')"><div class="circle">${foodEmoji(f)}</div><span>${escapeHtml(f.name)}</span></button>`).join('');
-}
-function getRecentFoods(){
-  const seen = new Map();
-  const ds = currentDateStr();
-  const days = Object.keys(state.logs).sort().reverse().slice(0,14);
-  days.forEach(d=>{
-    MEALS.forEach(m=> (state.logs[d][m.key]||[]).forEach(it=>{
-      if(!seen.has(it.foodId)) seen.set(it.foodId, it);
-    }));
-  });
-  return Array.from(seen.values()).slice(0,8);
-}
-function renderRecentList(){
-  const items = getRecentFoods();
-  const el = document.getElementById('recentList');
-  document.getElementById('recentSection').style.display = items.length? 'block':'none';
-  el.innerHTML = items.map(it=>{
-    const food = findFood(it.foodId);
-    return `<div class="recent-row">
-      <div class="recent-left" style="cursor:pointer;" onclick="openQtySheet('${it.foodId}', ${it.amount})">
-        <div>
-          <div class="re-name">${escapeHtml(it.name)}</div>
-          <div class="re-meta">${formatAmount(it)} · ${Math.round(it.kcal)} kcal</div>
-        </div>
-      </div>
-      <button class="again-btn" onclick="quickAddAgain('${it.foodId}', ${it.amount})">เพิ่มอีกครั้ง</button>
-    </div>`;
-  }).join('');
-}
-function quickAddAgain(foodId, amount){
-  const food = findFood(foodId);
-  if(!food) return;
-  const entry = buildLogEntry(food, amount);
-  ensureDay(currentDateStr())[currentAddMeal].push(entry);
-  saveState();
-  showToast(`เพิ่ม ${food.name} ${formatAmount(entry)} แล้ว`);
-  renderRecentList();
-}
-
-/* ================= FOODS BROWSE TAB ================= */
-function renderFoodsBrowse(){
-  buildFilterChips('filterChipsBrowse', activeFilterBrowse, (k)=>{activeFilterBrowse=k; renderFoodsBrowse();});
-  const q = document.getElementById('foodsBrowseSearch').value;
-  const list = allFoods().filter(f=>matchesSearch(f,q) && matchesFilter(f,activeFilterBrowse));
-  const el = document.getElementById('foodsBrowseList');
-  if(list.length===0){ el.innerHTML = `<div class="empty-hint" style="text-align:center;padding:20px;">ไม่พบอาหารที่ค้นหา</div>`; return; }
-  el.innerHTML = list.map(f=>foodCardHtml(f)).join('');
-}
-
-/* ================= QUANTITY SHEET ================= */
-function openQtySheet(foodId, prefillAmount){
-  const food = findFood(foodId);
-  if(!food) return;
-  qtyContext = {food};
-  document.getElementById('qtyFoodName').textContent = food.name;
-  document.getElementById('qtyFoodBase').textContent = `ต่อ ${food.base} ${food.unitLabel} · ${food.kcal} kcal`;
-  document.getElementById('qtyUnitLabel').textContent = food.unitLabel;
-  const startAmt = prefillAmount || food.base;
-  document.getElementById('qtyAmount').value = startAmt;
-  document.getElementById('qtyAmount').step = food.unit==='piece' ? 0.5 : 5;
-  qtyRecalc();
-  openSheet('qtyOverlay');
-}
-function qtyStepSize(){
-  const f = qtyContext.food;
-  return f.unit==='piece' ? 0.5 : 5;
-}
-function qtyStep(dir){
-  const input = document.getElementById('qtyAmount');
-  let v = parseFloat(input.value)||0;
-  v = Math.max(0, v + dir*qtyStepSize());
-  input.value = (v % 1 === 0) ? v : v.toFixed(1);
-  qtyRecalc();
-}
-function qtyRecalc(){
-  const f = qtyContext.food;
-  const amt = parseFloat(document.getElementById('qtyAmount').value)||0;
-  const ratio = amt/f.base;
-  document.getElementById('qrKcal').textContent = Math.round(f.kcal*ratio);
-  document.getElementById('qrProtein').textContent = round1(f.p*ratio)+'g';
-  document.getElementById('qrCarbs').textContent = round1(f.c*ratio)+'g';
-  document.getElementById('qrFat').textContent = round1(f.f*ratio)+'g';
-}
-function round1(v){ return Math.round(v*10)/10; }
-function buildLogEntry(food, amount){
-  const ratio = amount/food.base;
-  return {
-    entryId: 'e'+Date.now()+Math.floor(Math.random()*1000),
-    foodId: food.id, name: food.name, amount, unitLabel: food.unitLabel,
-    kcal: food.kcal*ratio, p: food.p*ratio, c: food.c*ratio, f: food.f*ratio, fiber:(food.fiber||0)*ratio
-  };
-}
-function confirmAddFood(){
-  const f = qtyContext.food;
-  const amt = parseFloat(document.getElementById('qtyAmount').value)||0;
-  if(amt<=0){ showToast('กรุณาระบุปริมาณ'); return; }
-  const entry = buildLogEntry(f, amt);
-  ensureDay(currentDateStr())[currentAddMeal].push(entry);
-  saveState();
-  closeSheet('qtyOverlay');
-  showToast(`เพิ่ม ${f.name} ${formatAmount(entry)} แล้ว`);
-  showView('home');
-}
-
-/* ================= EDIT / DELETE LOGGED ITEM ================= */
-function deleteLoggedItem(mealKey, entryId){
-  const day = ensureDay(currentDateStr());
-  day[mealKey] = day[mealKey].filter(it=>it.entryId!==entryId);
-  saveState();
-  renderHome();
-}
-function editLoggedItem(mealKey, entryId){
-  const day = ensureDay(currentDateStr());
-  const item = day[mealKey].find(it=>it.entryId===entryId);
-  if(!item) return;
-  const food = findFood(item.foodId);
-  if(!food){ return; }
-  deleteLoggedItem(mealKey, entryId);
-  currentAddMeal = mealKey;
-  openQtySheet(food.id, item.amount);
-}
-
-/* ================= MEAL DETAIL ================= */
-function openMealDetail(mealKey){
-  const day = ensureDay(currentDateStr());
-  const items = day[mealKey];
-  const m = MEALS.find(x=>x.key===mealKey);
-  document.getElementById('mdMealName').textContent = m.name;
-  const el = document.getElementById('mdItems');
-  if(items.length===0){
-    el.innerHTML = `<div class="empty-hint" style="text-align:center;padding:20px 0;">ยังไม่มีรายการอาหารในมื้อนี้</div>`;
-  } else {
-    el.innerHTML = items.map(it=>`
-      <div class="food-row">
-        <div><div class="fname">${escapeHtml(it.name)}</div><div class="famt">${formatAmount(it)}</div></div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="fkcal">${Math.round(it.kcal)} kcal</span>
-          <button class="food-row-del" onclick="deleteLoggedItem('${mealKey}','${it.entryId}');closeSheet('mealDetailOverlay');renderHome();">✕</button>
-        </div>
-      </div>`).join('');
-  }
-  const totals = items.reduce((s,i)=>({kcal:s.kcal+i.kcal,p:s.p+i.p,c:s.c+i.c,f:s.f+i.f,fiber:s.fiber+(i.fiber||0)}), {kcal:0,p:0,c:0,f:0,fiber:0});
-  document.getElementById('mdTotals').innerHTML = `
-    <div class="qr-item"><div class="qr-v num">${Math.round(totals.kcal)}</div><div class="qr-l">kcal</div></div>
-    <div class="qr-item"><div class="qr-v num">${round1(totals.p)}</div><div class="qr-l">Protein</div></div>
-    <div class="qr-item"><div class="qr-v num">${round1(totals.c)}</div><div class="qr-l">Carbs</div></div>
-    <div class="qr-item"><div class="qr-v num">${round1(totals.f)}</div><div class="qr-l">Fat</div></div>
-  `;
-  openSheet('mealDetailOverlay');
-}
-
-/* ================= CUSTOM FOOD ================= */
-function openCustomFood(){
-  ['cfName','cfKcal','cfProtein','cfCarbs','cfFat','cfFiber'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('cfUnit').value='g';
-  openSheet('customOverlay');
-}
-function saveCustomFood(){
-  const name = document.getElementById('cfName').value.trim();
-  const unit = document.getElementById('cfUnit').value;
-  const kcal = parseFloat(document.getElementById('cfKcal').value)||0;
-  const p = parseFloat(document.getElementById('cfProtein').value)||0;
-  const c = parseFloat(document.getElementById('cfCarbs').value)||0;
-  const f = parseFloat(document.getElementById('cfFat').value)||0;
-  const fiber = parseFloat(document.getElementById('cfFiber').value)||0;
-  if(!name){ showToast('กรุณากรอกชื่ออาหาร'); return; }
-  const food = {
-    id:'custom_'+Date.now(), name, en:name, unit, unitLabel: unit==='piece'?'serving':unit,
-    base: unit==='piece'?1:100, kcal,p,c,f,fiber, tags:['custom'], custom:true
-  };
-  state.customFoods.push(food);
-  saveState();
-  closeSheet('customOverlay');
-  showToast('บันทึกอาหารของคุณแล้ว');
-  renderFoodList(); renderFoodsBrowse();
-}
-
-/* ================= SHEETS ================= */
-function openSheet(id){ document.getElementById(id).classList.add('show'); }
-function closeSheet(id){ document.getElementById(id).classList.remove('show'); }
-document.querySelectorAll('.overlay').forEach(o=>{
-  o.addEventListener('click', (e)=>{ if(e.target===o) closeSheet(o.id); });
+function go(i){cur=i;history.replaceState(null,"","#t"+i);render(true);scrollTo({top:0})}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("#tabs button");if(t)return go(+t.dataset.i);
+  const g=e.target.closest(".go");
+  if(g){const k=tabs.findIndex(x=>x.title.replace(/\s/g,"")===g.dataset.go.replace(/\s/g,""));if(k>=0)go(k);return}
+  const h=e.target.closest("button.hd");if(h)(h.closest(".grp,.it,.card")||h.closest("li")).classList.toggle("open");
 });
+function status(c,txt){const s=$("#st");s.className=c;s.querySelector("span").textContent=txt}
+const trim=r=>{while(r.length&&!r[r.length-1].length)r.pop();return r};
+const toTabs=p=>p.sheets.map(s=>({title:s.properties.title,rows:trim((s.data||[]).flatMap(d=>d.rowData||[]).map(r=>trim((r.values||[]).map(c=>c.formattedValue||""))))}));
 
-/* ================= PROGRESS ================= */
-function renderProgress(){
-  const p = state.profile;
-  const wh = state.weightHistory.slice().sort((a,b)=>a.date.localeCompare(b.date));
-  const cur = wh.length? wh[wh.length-1].weight : p.weight;
-  document.getElementById('pgWeightCur').textContent = cur+' kg';
-  document.getElementById('pgWeightGoal').textContent = p.weightGoal+' kg';
-  document.getElementById('pgWeightLeft').textContent = Math.abs(cur-p.weightGoal).toFixed(1)+' kg';
-
-  drawWeightChart(wh, p.weightGoal);
-
-  const log = document.getElementById('weightLog');
-  if(wh.length===0){ log.innerHTML = `<div class="empty-hint">ยังไม่มีบันทึกน้ำหนัก</div>`; }
-  else {
-    log.innerHTML = wh.slice().reverse().slice(0,10).map(w=>`<div class="weight-log-row"><span>${formatDateShort(w.date)}</span><span>${w.weight} kg</span></div>`).join('');
-  }
-
-  renderWeekSummary();
-}
-function formatDateShort(dateStr){
-  const d = new Date(dateStr+'T00:00:00');
-  return new Intl.DateTimeFormat('th-TH',{day:'numeric',month:'short'}).format(d);
-}
-function drawWeightChart(wh, goal){
-  const svg = document.getElementById('weightChart');
-  if(wh.length<2){
-    svg.innerHTML = `<text x="160" y="60" text-anchor="middle" fill="var(--ink-faint)" font-size="12">บันทึกน้ำหนักอย่างน้อย 2 ครั้งเพื่อดูกราฟ</text>`;
-    return;
-  }
-  const vals = wh.map(w=>w.weight).concat([goal]);
-  const min = Math.min(...vals)-1, max = Math.max(...vals)+1;
-  const W=320,H=120,pad=10;
-  const stepX = (W-2*pad)/(wh.length-1);
-  const yOf = v => H-pad-((v-min)/(max-min))*(H-2*pad);
-  let path = wh.map((w,i)=>`${i===0?'M':'L'} ${pad+i*stepX} ${yOf(w.weight)}`).join(' ');
-  const goalY = yOf(goal);
-  let svgHtml = `<line x1="${pad}" y1="${goalY}" x2="${W-pad}" y2="${goalY}" stroke="var(--carbs)" stroke-width="1.5" stroke-dasharray="4 4"/>`;
-  svgHtml += `<path d="${path}" fill="none" stroke="var(--protein)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-  wh.forEach((w,i)=>{ svgHtml += `<circle cx="${pad+i*stepX}" cy="${yOf(w.weight)}" r="3.5" fill="var(--protein)"/>`; });
-  svg.innerHTML = svgHtml;
-}
-function logWeight(){
-  const v = parseFloat(document.getElementById('newWeightInput').value);
-  if(!v || v<=0){ showToast('กรุณาระบุน้ำหนักที่ถูกต้อง'); return; }
-  const ds = todayStr(0);
-  const existingIdx = state.weightHistory.findIndex(w=>w.date===ds);
-  if(existingIdx>=0) state.weightHistory[existingIdx].weight = v;
-  else state.weightHistory.push({date:ds, weight:v});
-  state.profile.weight = v;
-  saveState();
-  document.getElementById('newWeightInput').value='';
-  showToast('บันทึกน้ำหนักแล้ว');
-  renderProgress();
-}
-function renderWeekSummary(){
-  const days=[];
-  for(let i=6;i>=0;i--) days.push(todayStr(-i));
-  const goals = state.goals;
-  let sums={kcal:0,p:0,c:0,f:0}, daysWithData=0, onTarget=0;
-  days.forEach(ds=>{
-    const day = state.logs[ds];
-    if(!day) return;
-    const t = MEALS.reduce((acc,m)=>{ (day[m.key]||[]).forEach(it=>{acc.kcal+=it.kcal;acc.p+=it.p;acc.c+=it.c;acc.f+=it.f;}); return acc; }, {kcal:0,p:0,c:0,f:0});
-    if(t.kcal>0){
-      daysWithData++;
-      sums.kcal+=t.kcal; sums.p+=t.p; sums.c+=t.c; sums.f+=t.f;
-      if(Math.abs(t.kcal-goals.calories) <= goals.calories*0.15) onTarget++;
+const m=/^#t(\d+)$/.exec(location.hash);if(m&&SNAP[+m[1]])cur=+m[1];
+render(true);
+status("off","ข้อมูลสำรอง");
+setInterval(tick,1000);
+(async()=>{
+  let mcp=null;
+  try{mcp=window.claude&&await window.claude.use("mcp")}catch(e){}
+  if(!mcp){status("off","ข้อมูลสำรอง · เปิดผ่าน claude.ai เพื่อดูข้อมูลสด");return}
+  mcp.watchTool("Google Sheets","get_spreadsheet",{spreadsheetId:SHEET,includeGridData:true,fields:["sheets.properties.title","sheets.data.rowData.values.formattedValue"]},ev=>{
+    if(ev.type==="error"){
+      const c=ev.error&&ev.error.code;
+      status("off",["needs_reauth","server_not_connected","approval_required","not_granted","blocked_by_policy"].includes(c)?"ยังไม่ได้เชื่อม Google Sheets ใน claude.ai · แสดงข้อมูลสำรอง":"เชื่อมต่อไม่ได้ชั่วคราว · แสดงข้อมูลล่าสุดที่มี");
+      return;
     }
-  });
-  const n = Math.max(1,daysWithData);
-  const grid = document.getElementById('weekSumGrid');
-  grid.innerHTML = `
-    <div class="weeksum-item"><div class="wv num">${Math.round(sums.kcal/n)}</div><div class="wl">เฉลี่ย kcal/วัน</div></div>
-    <div class="weeksum-item"><div class="wv num">${Math.round(sums.p/n)}</div><div class="wl">เฉลี่ย Protein/วัน</div></div>
-    <div class="weeksum-item"><div class="wv num">${Math.round(sums.c/n)}</div><div class="wl">เฉลี่ย Carbs/วัน</div></div>
-    <div class="weeksum-item"><div class="wv num">${onTarget} / 7</div><div class="wl">วันที่ใกล้เป้าหมาย</div></div>
-  `;
-}
-
-/* ================= SETTINGS ================= */
-function renderSettings(){
-  const p = state.profile, g = state.goals;
-  document.getElementById('setAge').value = p.age;
-  document.getElementById('setHeight').value = p.height;
-  document.getElementById('setWeightGoal').value = p.weightGoal;
-  document.getElementById('setActivity').value = p.activity;
-  document.getElementById('setCalGoal').value = g.calories;
-  document.getElementById('setProteinGoal').value = g.protein;
-  document.getElementById('setCarbsGoal').value = g.carbs;
-  document.getElementById('setFatGoal').value = g.fat;
-  document.getElementById('setWaterGoal').value = p.waterGoalOverride || 2500;
-  document.getElementById('darkSwitch').classList.toggle('on', isDark());
-}
-function saveProfileSettings(){
-  const p = state.profile;
-  p.age = +document.getElementById('setAge').value;
-  p.height = +document.getElementById('setHeight').value;
-  p.weightGoal = +document.getElementById('setWeightGoal').value;
-  p.activity = +document.getElementById('setActivity').value;
-  saveState();
-  showToast('บันทึกข้อมูลส่วนตัวแล้ว');
-}
-function recalcGoalsFromSettings(){
-  saveProfileSettings();
-  const g = computeGoals(state.profile);
-  state.goals = g;
-  saveState();
-  renderSettings();
-  showToast('คำนวณเป้าหมายใหม่แล้ว');
-}
-function saveGoalSettings(){
-  state.goals = {
-    calories:+document.getElementById('setCalGoal').value,
-    protein:+document.getElementById('setProteinGoal').value,
-    carbs:+document.getElementById('setCarbsGoal').value,
-    fat:+document.getElementById('setFatGoal').value
-  };
-  saveState();
-  showToast('บันทึกเป้าหมายแล้ว');
-}
-function saveWaterGoal(){
-  state.profile.waterGoalOverride = +document.getElementById('setWaterGoal').value || 2500;
-  saveState();
-  showToast('บันทึกเป้าหมายน้ำแล้ว');
-}
-function isDark(){
-  const t = document.documentElement.getAttribute('data-theme');
-  if(t) return t==='dark';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-}
-function toggleDark(){
-  const newTheme = isDark() ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', newTheme);
-  state.theme = newTheme;
-  saveState();
-  document.getElementById('darkSwitch').classList.toggle('on', isDark());
-}
-function confirmReset(){
-  if(confirm('ต้องการลบข้อมูลทั้งหมดและเริ่มต้นใหม่หรือไม่?')){
-    localStorage.removeItem(LS_KEY);
-    location.reload();
-  }
-}
-
-/* ================= INIT ================= */
-function initApp(){
-  if(state.theme) document.documentElement.setAttribute('data-theme', state.theme);
-  currentAddMeal = state.lastMeal || 'lunch';
-  showView('home');
-}
-(function boot(){
-  if(state.profile && state.goals){
-    document.getElementById('onboarding').style.display='none';
-    document.getElementById('app').style.display='block';
-    initApp();
-  } else {
-    showObStep(0);
-  }
+    const p=ev.result.payload;if(!p||!Array.isArray(p.sheets))return;
+    const nt=toTabs(p),s=JSON.stringify(nt),at=ev.result.cache&&ev.result.cache.storedAt;
+    status("live","ข้อมูลสด · อัปเดต "+new Date(at||Date.now()).toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"}));
+    if(s!==sig){sig=s;tabs=nt;if(cur>=tabs.length)cur=0;render(false)}
+  },{refetchInterval:30000});
 })();
 </script>
 </body>
