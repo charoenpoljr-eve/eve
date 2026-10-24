@@ -122,6 +122,26 @@ tr.sect td{padding-top:22px;color:#fff;font-weight:600;border-bottom-color:rgba(
 #lang select{appearance:none;-webkit-appearance:none;background:transparent;border:0;color:var(--ink);font-family:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:99px;cursor:pointer;outline:0}
 #lang select option{background:#16181a;color:#eceef0}
 #lang:focus-within{border-color:rgba(255,255,255,.5)}
+
+.wx{padding:14px 14px 12px}
+.wxh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.wxh strong{font-weight:600;font-size:15px}
+.wxh small{color:var(--mut);font-size:11.5px}
+.wxg{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.wxd{text-align:center;color:var(--mut);font-size:11px;padding:2px 0 4px}
+.wxc{border-radius:12px;padding:6px 2px 7px;text-align:center;min-height:86px;display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(255,255,255,.03);border:1px solid transparent;font-size:11px;line-height:1.25}
+.wxc b{font-size:13px;font-weight:500}
+.wxc .wi{font-size:19px;line-height:1.3}
+.wxc .wt{font-variant-numeric:tabular-nums;color:var(--ink)}
+.wxc .wp{color:var(--mut);font-size:10.5px}
+.wxc.off{opacity:.35;min-height:0;justify-content:flex-start;padding-bottom:6px}
+.wxc.off b{font-weight:400}
+.wxc.trip{background:linear-gradient(150deg,rgba(255,255,255,.1),rgba(255,255,255,.04));border-color:rgba(255,255,255,.18);cursor:pointer;transition:border-color .2s}
+.wxc.trip:hover{border-color:rgba(255,255,255,.55)}
+.wxc.go{margin:0;display:flex;font-size:11px}
+.wxc .dn{font-size:9.5px;color:var(--mut);letter-spacing:.04em}
+.wx .note{margin:10px 0 0}
+@media(max-width:380px){.wxc{font-size:10px;min-height:80px}.wxc .wi{font-size:17px}}
 </style>
 </head>
 <body>
@@ -188,6 +208,42 @@ const T0=Date.UTC(2026,11,24,6,35),T1=Date.UTC(2026,11,30,11,25),S0=Date.UTC(202
 const dayN=()=>Math.floor((Date.now()+7*36e5)/864e5)-Math.floor(Date.UTC(2026,11,24)/864e5)+1;
 const phase=()=>{const n=Date.now();return n<T0?0:n<=T1?1:2};
 
+
+const WX={live:{},n:0,at:null};
+const WXN={};for(let d=24;d<=30;d++)WXN[d]={hi:9,lo:2,p:28,c:2};
+const WL=(a,b,c)=>LG==="en"?b:LG==="zh"?c:a;
+const WI=c=>c===0?"☀️":c<=2?"⛅":c===3?"☁️":(c===45||c===48)?"🌫️":(c>=51&&c<=57)?"🌦️":(c>=61&&c<=67)?"🌧️":(c>=71&&c<=77)||c===85||c===86?"🌨️":(c>=80&&c<=82)?"🌦️":c>=95?"⛈️":"⛅";
+function wxCal(){
+  const D=d=>WX.live[d]||WXN[d],isL=d=>!!WX.live[d];
+  const wd=WL(["อา","จ","อ","พ","พฤ","ศ","ส"],["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],["日","一","二","三","四","五","六"]);
+  const weeks=[[20,21,22,23,24,25,26],[27,28,29,30,31,1,2]];
+  let g=wd.map(x=>`<div class="wxd">${x}</div>`).join("");
+  for(const w of weeks)for(let i=0;i<7;i++){
+    const d=w[i],trip=(w===weeks[0]?d>=24:d>=27&&d<=30);
+    if(!trip){g+=`<div class="wxc off"><b>${d}</b></div>`;continue}
+    const x=D(d),L=isL(d),tb=tabs.find(z=>new RegExp("^วัน"+(d-23)+"\\s").test(z.title));
+    g+=`<div class="wxc trip${tb?" go":""}"${tb?` data-go="${esc(tb.title)}"`:""}><b>${d}</b><span class="dn">${WL("วัน","DAY","第")}${d-23}${WL("","","天")}</span><span class="wi">${WI(x.c)}</span><span class="wt">${L?"":"~"}${x.hi}°/${x.lo}°</span>${x.p!=null?`<span class="wp">💧${x.p}%</span>`:""}</div>`;
+  }
+  const ds=[24,25,26,27,28,29,30].map(D),hi=Math.max(...ds.map(x=>x.hi)),lo=Math.min(...ds.map(x=>x.lo)),pm=Math.max(...ds.map(x=>x.p||0));
+  const live=WX.n>0,tm=WX.at?new Date(WX.at).toLocaleTimeString(LG==="en"?"en-GB":LG==="zh"?"zh-CN":"th-TH",{hour:"2-digit",minute:"2-digit"}):"";
+  const sub=live?WL("พยากรณ์จริง · อัปเดต "+tm+(WX.n<7?" · บางวันยังเป็นค่าเฉลี่ย (~)":""),"Live forecast · updated "+tm+(WX.n<7?" · some days still averages (~)":""),"实时预报 · 更新于 "+tm+(WX.n<7?" · 部分日期仍为平均值（~）":""))
+    :WL("ค่าเฉลี่ยปกติปลายเดือน ธ.ค. (~) ยังไม่มีพยากรณ์จริง","Typical late-December averages (~), no live forecast yet","12月下旬常年平均值（~），暂无实时预报");
+  const sum=WL(`สรุป: หนาวเย็น ประมาณ ${lo}–${hi}°C โอกาสฝนสูงสุดราว ${pm}% • พกเสื้อกันหนาว ถุงมือ หมวก และร่มพับ แนะนำใส่หลายชั้น`,
+    `Summary: cold, about ${lo}–${hi}°C, rain chance up to ~${pm}% • Pack a winter coat, gloves, a hat and a compact umbrella; dress in layers`,
+    `总结：寒冷，约 ${lo}–${hi}°C，降雨概率最高约 ${pm}% • 请携带冬季外套、手套、帽子和折叠伞，建议洋葱式穿搭`);
+  const tip=live&&WX.n>=7?"":WL("พยากรณ์จริงจะอัปเดตเองเมื่อใกล้วันเดินทาง (ประมาณ 2 สัปดาห์ก่อน) • ต้องต่ออินเทอร์เน็ต • แตะวันที่เพื่อดูแผนของวันนั้น","Live forecasts load automatically about 2 weeks before departure • needs internet • tap a date to see that day's plan","实时预报将在出发前约2周自动更新 • 需联网 • 点击日期查看当天行程");
+  return `<article class="card wx rise" style="--i:3"><div class="wxh"><strong>${WL("พยากรณ์อากาศ · ธันวาคม 2026","Weather · December 2026","天气 · 2026年12月")} (${WL("เซี่ยงไฮ้","Shanghai","上海")})</strong><small>${sub}</small></div><div class="wxg">${g}</div><p class="note">${sum}</p>${tip?`<p class="note">${tip}</p>`:""}</article>`;
+}
+async function wxLoad(){
+  try{
+    const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=31.23&longitude=121.47&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FShanghai&forecast_days=16");
+    if(!r.ok)return;const j=await r.json(),dd=j&&j.daily;if(!dd||!dd.time)return;
+    const o={};let n=0;
+    dd.time.forEach((s,i)=>{if(s.slice(0,7)!=="2026-12")return;const d=+s.slice(8);if(d<24||d>30||dd.temperature_2m_max[i]==null)return;
+      o[d]={hi:Math.round(dd.temperature_2m_max[i]),lo:Math.round(dd.temperature_2m_min[i]),p:dd.precipitation_probability_max[i],c:dd.weather_code[i]};n++});
+    if(n>0){WX.live=o;WX.n=n;WX.at=Date.now();if(cur===0)render(false)}
+  }catch(e){}
+}
 function split(rows){
   const hi=rows.findIndex(r=>r.filter(Boolean).length>=3&&r.every(c=>!c||num(c)===null));
   return hi<0?{pre:rows,head:null,body:[]}:{pre:rows.slice(0,hi),head:rows[hi],body:rows.slice(hi+1)};
@@ -226,7 +282,7 @@ function summary(b){
   const rest=b.filter(r=>!days.includes(r)&&r!==tot).flat().filter(Boolean);
   const max=Math.max(...days.map(r=>num(r[8])||0),1),cur_=phase()===1?dayN():0;
   let o=hero()+`<div class="tiles rise" style="--i:2"><div class="tile"><small>ระยะเวลา</small><b>${days.length} วัน</b></div><div class="tile"><small>งบเที่ยว/กิน/เดินทาง (฿)</small><b data-count="${Math.round((num(tot&&tot[8])||0)*RATE)}">0</b></div></div>`;
-  o+=days.map((r,i)=>`<article class="card rise${cur_===+r[0]?" today":""}" style="--i:${i}"><button class="hd"><i>${esc(r[0])}</i><div><strong>${esc(r[2])}</strong><small>${esc(r[1])}</small></div><em>฿${R(num(r[8])||0)}</em></button><div class="bar"><u style="--w:${(num(r[8])||0)/max*100}%"></u></div><div class="more"><div><dl><dt>พักคืนนี้</dt><dd>${esc(r[3])}</dd><dt>ไฮไลต์</dt><dd>${esc(r[4])}</dd><dt>เดินทาง</dt><dd>${esc(r[5])}</dd><dt>ต้องทำ</dt><dd>${esc(r[6])}</dd></dl><a class="go" data-go="${esc(r[7])}">ดูรายละเอียดวันนี้ →</a></div></div></article>`).join("");
+  o+=wxCal();o+=days.map((r,i)=>`<article class="card rise${cur_===+r[0]?" today":""}" style="--i:${i}"><button class="hd"><i>${esc(r[0])}</i><div><strong>${esc(r[2])}</strong><small>${esc(r[1])}</small></div><em>฿${R(num(r[8])||0)}</em></button><div class="bar"><u style="--w:${(num(r[8])||0)/max*100}%"></u></div><div class="more"><div><dl><dt>พักคืนนี้</dt><dd>${esc(r[3])}</dd><dt>ไฮไลต์</dt><dd>${esc(r[4])}</dd><dt>เดินทาง</dt><dd>${esc(r[5])}</dd><dt>ต้องทำ</dt><dd>${esc(r[6])}</dd></dl><a class="go" data-go="${esc(r[7])}">ดูรายละเอียดวันนี้ →</a></div></div></article>`).join("");
   return o+rest.map(n=>`<p class="note">${fmt(n)}</p>`).join("");
 }
 function timeline(b){
@@ -394,7 +450,7 @@ const toTabs=p=>p.sheets.map(s=>({title:s.properties.title,rows:trim((s.data||[]
 const m=/^#t(\d+)$/.exec(location.hash);if(m&&SNAP[+m[1]])cur=+m[1];
 render(true);
 status("off","ข้อมูลสำรอง");
-setInterval(tick,1000);
+setInterval(tick,1000);wxLoad();setInterval(wxLoad,36e5);
 (function(){
   const sel=$("#langsel");sel.value=LG;
   sel.addEventListener("change",()=>{
