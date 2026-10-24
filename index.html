@@ -547,15 +547,18 @@ function speak(x,b){try{const s=window.speechSynthesis;if(!s)return;s.cancel();c
 const PK=[["เอกสาร",["พาสปอร์ต (อายุเหลือ ≥ 6 เดือน)","เซฟใบจองลงมือถือแบบออฟไลน์","ประกันเดินทาง","เงินสดสำรอง + บัตรที่ผูก Alipay/WeChat"]],["เสื้อผ้า (0–9°C)",["เสื้อโค้ทกันหนาว","ฮีทเทค / เสื้อซ้อนใน","ถุงมือ หมวก ผ้าพันคอ","ร่มพับ","รองเท้าเดินสบาย กันลื่น"]],["อุปกรณ์",["eSIM หรือโรมมิ่ง","พาวเวอร์แบงก์ (ถือขึ้นเครื่อง)","ปลั๊กแปลง + ที่ชาร์จ","แอป Didi / Alipay / Trip.com / 12306","แผนที่ออฟไลน์"]],["ของใช้",["ยาประจำตัว / ยาแก้ปวด / ยาแก้ท้องเสีย","ลิปบาล์ม โลชั่น ครีมกันแห้ง","หน้ากากอนามัย / เจลล้างมือ"]]];
 const TK=[["ตลาดคริสต์มาส Christkindlmarkt (25 ธ.ค. ~18:15)","ซื้อผ่าน SmartShanghai Mini Program ไม่คืนเงิน"],["ล่องเรือหวงผู่ (25 ธ.ค. 20:00)","Trip.com / Klook"],["พิพิธภัณฑ์ธรรมชาติวิทยา (26 ธ.ค.)","จองด้วยพาสปอร์ต"],["พิพิธภัณฑ์เซี่ยงไฮ้ (26 ธ.ค.)","จองด้วยพาสปอร์ต"],["ตั๋วรถไฟไปซูโจว (27 ธ.ค.)","ใช้พาสปอร์ต"],["พิพิธภัณฑ์ซูโจว (27 ธ.ค.)","จองล่วงหน้า"],["Shanghai Tower (28 ธ.ค.)","ซื้อตั๋วล่วงหน้า"],["Shanghai Disney (29 ธ.ค.)","แอป Shanghai Disney Resort"]];
 function cp(x){const fb=()=>{const a=document.createElement("textarea");a.value=x;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}a.remove()};try{navigator.clipboard.writeText(x).catch(fb)}catch(e){fb()}}
+function fxView(){
+  const rate=LS.g("rate",RATE),P=[10,20,50,100,200,500,1000,2000],I='type="number" inputmode="decimal" style="font-size:22px"';
+  return `<header class="sec"><h2 style="font-size:15px;margin-top:6px">💱 แปลงเงิน ¥ ↔ ฿</h2><p class="note">พิมพ์ช่องไหนก็ได้ อีกช่องคำนวณให้ • เรตตั้งต้นเป็นค่าสมมติ แก้เป็นเรตจริงตอนแลกเงิน (ใช้เฉพาะหน้านี้)</p></header><article class="card rise" style="padding:16px"><div class="cy" style="grid-template-columns:1fr 1fr"><label>¥ หยวน (CNY)<input id="cc" ${I}></label><label>฿ บาท (THB)<input id="cb" ${I}></label></div><div class="cy" style="grid-template-columns:1fr;margin-top:12px"><label>เรต ฿ ต่อ ¥1<input id="cr" type="number" inputmode="decimal" step="0.01" value="${rate}"></label></div></article><h3 class="sect">ราคาที่เจอบ่อย (แตะเพื่อใส่ในช่อง ¥)</h3><article class="card rise" style="padding:6px 16px">${P.map(y=>`<div class="tr" data-fy="${y}" style="cursor:pointer"><b>¥${y.toLocaleString("en-US")}</b><span data-y="${y}">฿${Math.round(y*rate).toLocaleString("en-US")}</span></div>`).join("")}</article>`;
+}
 function toolsView(){
   let n=0;const E=esc0;
   const card=(ic,ti,sb,b)=>`<article class="card cmp rise" style="--i:${n++}"><button class="hd"><i>${ic}</i><div><strong>${ti}</strong><small>${sb}</small></div><s></s></button><div class="more"><div>${b}</div></div></article>`;
   const q=encodeURIComponent,chk=(g,items)=>{const s=LS.g(g,{});return items.map(([l,sb],i)=>`<button class="ck2${s[g+i]?" on":""}" data-ck="${g}:${g+i}"><span></span><div>${l}${sb?`<small style="display:block;color:var(--mut);font-size:12px">${sb}</small>`:""}</div></button>`).join("")};
   const rate=LS.g("rate",RATE),ex=LS.g("ex",[]),bt=(tabs[0].rows.find(r=>(r[0]||"").startsWith("รวมงบ"))||[])[8],sum=ex.reduce((a,x)=>a+x.a,0);
-  let o=`<header class="sec"><h2>🧰 เครื่องมือระหว่างทริป</h2><p class="note">ข้อมูลที่ติ๊ก/กรอกเก็บไว้ในเครื่องนี้ (ไม่ซิงก์ข้ามเครื่อง)</p></header>`;
+  let o=`<header class="sec"><h2>🧰 เครื่องมือระหว่างทริป</h2><p class="note">ข้อมูลที่ติ๊ก/กรอกเก็บไว้ในเครื่องนี้ (ไม่ซิงก์ข้ามเครื่อง)</p></header>`;o+=fxView();
   o+=card("📍","ที่อยู่ภาษาจีน","โชว์คนขับ / ใส่ Didi ได้เลย",AD.map(([a,z])=>`<div class="tr"><div><b>${a}</b><div class="zh">${z}</div></div><div class="ac"><button class="chip" data-cp="${z}">คัดลอก</button><a class="chip" target="_blank" rel="noopener" href="https://maps.apple.com/?q=${q(z)}">แผนที่</a><a class="chip" target="_blank" rel="noopener" href="https://uri.amap.com/search?keyword=${q(z)}">高德</a></div></div>`).join("")+`<p class="note">ตรวจชื่อ/เลขที่ในแอปแผนที่อีกครั้งก่อนใช้ • Google Maps ใช้ในจีนไม่ค่อยได้ ลองแผนที่/高德แทน</p>`);
   o+=card("💬","วลีภาษาจีนที่ใช้บ่อย","เลือกหมวด · แตะประโยคเพื่อฟังเสียง",PHC.map(([c,l],ci)=>`<details class="pdd"${ci===0?" open":""}><summary>${c}<small>${l.length}</small></summary>`+l.map(([a,z,p])=>`<div class="tr spk" data-sp="${z}"><div><b>${a}</b><div class="zh">${z}</div><small>${p}</small></div><span class="spi">🔊</span></div>`).join("")+`</details>`).join("")+`<p class="note">เสียงมาจากเครื่องของคุณ ถ้าไม่มีเสียง ให้เปิดเสียงมือถือและเพิ่มเสียงภาษาจีนใน ตั้งค่า → การช่วยการเข้าถึง → เนื้อหาที่อ่านออกเสียง (iPhone)</p>`);
-  o+=card("💱","แปลงเงิน ¥ ↔ ฿","แก้เรตได้ (ค่าเริ่มต้น "+rate+")",`<div class="cy"><label>¥ หยวน<input id="cc" type="number" inputmode="decimal"></label><label>฿ บาท<input id="cb" type="number" inputmode="decimal"></label><label>เรต ฿/¥<input id="cr" type="number" inputmode="decimal" step="0.01" value="${rate}"></label></div>`);
   o+=card("🎒","แพ็คกระเป๋า","ติ๊กแล้วจำไว้",PK.map(([g,it],gi)=>`<div class="tt">${g}</div>`+chk("pk"+gi,it.map(x=>[x]))).join(""));
   o+=card("🎟️","ตั๋วที่ต้องซื้อล่วงหน้า","ติ๊กเมื่อซื้อแล้ว",chk("tk",TK)+`<div class="tt">เส้นตายยกเลิกฟรี</div><p class="note">Waiting Hotel ก่อน 18:00 วันที่ 24 ธ.ค. • Mehood ก่อน 18:00 วันที่ 26 ธ.ค. • Kimpton ก่อน 27 ธ.ค.</p>`);
   o+=card("🧾","ค่าใช้จ่ายจริง","ใช้ไป ¥"+sum.toLocaleString("en-US")+" (฿"+R(sum)+")"+(num(bt)?" จากงบ ¥"+num(bt).toLocaleString("en-US"):""),`<div class="fx"><select id="exd">${[1,2,3,4,5,6,7].map(d=>`<option value="${d}">วัน ${d}</option>`).join("")}</select><input id="exa" type="number" inputmode="decimal" placeholder="¥ จำนวน"><input id="exn" placeholder="รายการ"></div><button class="chip" id="exadd">+ เพิ่ม</button>`+ex.map((x,i)=>`<div class="tr"><div><b>วัน ${x.d} · ¥${x.a.toLocaleString("en-US")}</b><small>${E(x.n||"")}</small></div><button class="chip" data-exdel="${i}">ลบ</button></div>`).join(""));
@@ -564,6 +567,7 @@ function toolsView(){
   return o;
 }
 document.addEventListener("click",e=>{
+  const fy=e.target.closest("[data-fy]");if(fy){const c=$("#cc");c.value=fy.dataset.fy;c.dispatchEvent(new Event("input",{bubbles:true}));return}
   const sp=e.target.closest("[data-sp]");if(sp){speak(sp.dataset.sp,sp);return}
   const c=e.target.closest("[data-cp]");
   if(c){cp(c.dataset.cp);const o=c.textContent;c.textContent="✓";setTimeout(()=>{c.textContent=o},900);return}
@@ -577,7 +581,7 @@ document.addEventListener("input",e=>{
   const i=e.target.id,r=parseFloat($("#cr")&&$("#cr").value)||RATE;
   if(i==="cc")$("#cb").value=$("#cc").value?+(parseFloat($("#cc").value)*r).toFixed(2):"";
   else if(i==="cb")$("#cc").value=$("#cb").value?+(parseFloat($("#cb").value)/r).toFixed(2):"";
-  else if(i==="cr"){LS.s("rate",r);if($("#cc").value)$("#cb").value=+(parseFloat($("#cc").value)*r).toFixed(2)}
+  else if(i==="cr"){LS.s("rate",r);if($("#cc").value)$("#cb").value=+(parseFloat($("#cc").value)*r).toFixed(2);document.querySelectorAll("[data-y]").forEach(s=>{s.textContent="฿"+Math.round(+s.dataset.y*r).toLocaleString("en-US")})}
   else if(e.target.dataset&&e.target.dataset.note)LS.s("note_"+e.target.dataset.note,e.target.value);
 });
 function go(i){cur=i;history.replaceState(null,"","#t"+i);render(true);scrollTo({top:0})}
