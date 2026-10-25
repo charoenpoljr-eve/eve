@@ -178,6 +178,7 @@ a.drv{cursor:pointer;text-decoration:underline}.lk{font-size:10px;margin-right:4
 .tt{margin:10px 0 2px;font-size:12px;color:var(--mut);font-weight:600}
 .spk{cursor:pointer;-webkit-tap-highlight-color:transparent}.spk.pl .zh{color:#fff;text-shadow:0 0 10px var(--glow)}
 .spi{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid var(--line);font-size:15px}.spk:active .spi,.spk.pl .spi{background:rgba(255,255,255,.3)}
+#big{position:fixed;inset:0;z-index:90;background:#fff;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}#big[hidden]{display:none}#bigt{font-size:min(14vw,64px);font-weight:600;line-height:1.35;word-break:break-all}#big p{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));margin:0;color:#666;font-size:13px}
 .pdd{border-top:1px solid var(--line)}.pdd:first-of-type{border-top:0}
 .pdd summary{list-style:none;cursor:pointer;display:flex;align-items:center;padding:12px 0;font-weight:500;font-size:14.5px}.pdd summary::-webkit-details-marker{display:none}
 .pdd summary small{color:var(--mut);font-size:12px;margin-left:auto;margin-right:10px}
@@ -192,6 +193,7 @@ a.drv{cursor:pointer;text-decoration:underline}.lk{font-size:10px;margin-right:4
 <div class="qa"><button class="chip" id="drvb">📎 <span></span></button><button class="chip" id="lkb" hidden></button></div>
 <main id="main"></main>
 </div>
+<div id="big" hidden><div id="bigt"></div><p>แตะที่ใดก็ได้เพื่อปิด</p></div>
 <div id="pin" aria-modal="true" role="dialog"><h3></h3><p id="pm"></p><div id="pd"><i></i><i></i><i></i><i></i></div><div id="pg"></div></div>
 <div class="dock"><div id="tabs"></div></div>
 <script>
@@ -334,7 +336,7 @@ function timeline(b){
   for(const r of b){
     if(/^\d{1,2}:\d\d$/.test(r[0]||"")){
       const c=num(r[4])?`<em>฿${R(num(r[4]))}</em>`:"";
-      o+=`<li class="rise" style="--i:${i++}"><time>${esc(r[0])}</time><div class="ev"><button class="hd"><strong>${esc(r[1])}</strong>${c}</button>${r[3]&&r[3]!=="-"?`<small>${esc(r[3])}</small>`:""}<div class="more"><div>${r[2]?`<p>${fmt(r[2])}</p>`:""}${r[5]?`<p class="note">${fmt(r[5])}</p>`:""}</div></div></div></li>`;
+      o+=`<li class="rise" style="--i:${i++}"><time>${esc(r[0])}</time><div class="ev"><button class="hd"><strong>${esc(r[1])}</strong>${c}</button>${r[3]&&r[3]!=="-"?`<small>${esc(r[3])}</small>`:""}<div class="more"><div>${r[2]?`<p>${fmt(r[2])}</p>`:""}${r[5]?`<p class="note">${fmt(r[5])}</p>`:""}${mapBtn(r[1]||"")}</div></div></div></li>`;
     }else if((r[0]||"").startsWith("รวม"))tail+=`<div class="total"><span>รวมค่าใช้จ่ายโดยประมาณของวันนี้ (฿)</span><b data-count="${Math.round((num(r[4])||0)*RATE)}">0</b></div>`;
     else if(r.some(Boolean))tail+=`<p class="note">${fmt(r.filter(Boolean).join(" "))}</p>`;
   }
@@ -476,7 +478,7 @@ function render(anim){
   const on=bar.querySelector(".on");
   if(on)bar.scrollTo({left:on.offsetLeft-bar.clientWidth/2+on.clientWidth/2,behavior:anim?"smooth":"auto"});
   const m=$("#main");m.classList.toggle("static",!anim);
-  m.innerHTML=view(tabs[cur],cur);
+  m.innerHTML=(cur===0?topCards():"")+view(tabs[cur],cur);
   m.querySelectorAll(".rise").forEach(e=>io.observe(e));
   chips();counts(m);tick();xl(document.body);document.documentElement.lang=LG==="zh"?"zh-CN":LG;document.title=TTL[LG];
 }
@@ -547,6 +549,23 @@ function speak(x,b){try{const s=window.speechSynthesis;if(!s)return;s.cancel();c
 const PK=[["เอกสาร",["พาสปอร์ต (อายุเหลือ ≥ 6 เดือน)","เซฟใบจองลงมือถือแบบออฟไลน์","ประกันเดินทาง","เงินสดสำรอง + บัตรที่ผูก Alipay/WeChat"]],["เสื้อผ้า (0–9°C)",["เสื้อโค้ทกันหนาว","ฮีทเทค / เสื้อซ้อนใน","ถุงมือ หมวก ผ้าพันคอ","ร่มพับ","รองเท้าเดินสบาย กันลื่น"]],["อุปกรณ์",["eSIM หรือโรมมิ่ง","พาวเวอร์แบงก์ (ถือขึ้นเครื่อง)","ปลั๊กแปลง + ที่ชาร์จ","แอป Didi / Alipay / Trip.com / 12306","แผนที่ออฟไลน์"]],["ของใช้",["ยาประจำตัว / ยาแก้ปวด / ยาแก้ท้องเสีย","ลิปบาล์ม โลชั่น ครีมกันแห้ง","หน้ากากอนามัย / เจลล้างมือ"]]];
 const TK=[["ตลาดคริสต์มาส Christkindlmarkt (25 ธ.ค. ~18:15)","ซื้อผ่าน SmartShanghai Mini Program ไม่คืนเงิน"],["ล่องเรือหวงผู่ (25 ธ.ค. 20:00)","Trip.com / Klook"],["พิพิธภัณฑ์ธรรมชาติวิทยา (26 ธ.ค.)","จองด้วยพาสปอร์ต"],["พิพิธภัณฑ์เซี่ยงไฮ้ (26 ธ.ค.)","จองด้วยพาสปอร์ต"],["ตั๋วรถไฟไปซูโจว (27 ธ.ค.)","ใช้พาสปอร์ต"],["พิพิธภัณฑ์ซูโจว (27 ธ.ค.)","จองล่วงหน้า"],["Shanghai Tower (28 ธ.ค.)","ซื้อตั๋วล่วงหน้า"],["Shanghai Disney (29 ธ.ค.)","แอป Shanghai Disney Resort"]];
 function cp(x){const fb=()=>{const a=document.createElement("textarea");a.value=x;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}a.remove()};try{navigator.clipboard.writeText(x).catch(fb)}catch(e){fb()}}
+const MN=[["เซิ่งเจียน (ซาลาเปาทอด)","生煎包","shēngjiānbāo"],["เสี่ยวหลงเปา","小笼包","xiǎolóngbāo"],["หมูสามชั้นตุ๋นแดง","红烧肉","hóngshāoròu"],["บะหมี่น้ำมันต้นหอม","葱油拌面","cōngyóu bànmiàn"],["ซี่โครงหมูเปรี้ยวหวาน","糖醋小排","tángcù xiǎopái"],["เกี๊ยวน้ำ","馄饨","húntun"],["ชานม","奶茶","nǎichá"]];
+const mapBtn=t=>/เช็คเอาท์|กลับโรงแรม|ถึงสนามบิน|ออกเดินทาง|เดินทางเข้าเมือง/.test(t)?"":`<p><a class="chip" target="_blank" rel="noopener" href="https://maps.apple.com/?q=${encodeURIComponent(t+" Shanghai")}">📍 แผนที่</a> <a class="chip" target="_blank" rel="noopener" href="https://uri.amap.com/search?keyword=${encodeURIComponent(t)}">高德</a></p>`;
+function splitEx(ex){if(!ex.length)return"";let a=0,b=0;ex.forEach(x=>{if(x.p==="B")b+=x.a;else a+=x.a});const d=(a-b)/2,f=v=>v.toLocaleString("en-US",{maximumFractionDigits:2});return `<p class="note">Peingwaree จ่าย ¥${f(a)} • Pichitra จ่าย ¥${f(b)} • `+(Math.abs(d)<.005?"หารกันพอดี":d>0?`Pichitra โอนให้ Peingwaree ¥${f(d)} (฿${R(d)})`:`Peingwaree โอนให้ Pichitra ¥${f(-d)} (฿${R(-d)})`)+`</p>`}
+function topCards(){
+  const now=Date.now(),cn=new Date(now+8*36e5),o=[];
+  const dn=Math.floor((now+8*36e5)/864e5)-Math.floor(Date.UTC(2026,11,24)/864e5)+1;
+  if(dn>=1&&dn<=7){
+    const r=tabs[0].rows.find(x=>String(x[0])===String(dn)&&x.length>=8);
+    if(r){
+      const tb=tabs.find(z=>z.title.startsWith("วัน"+dn)),hm=("0"+cn.getUTCHours()).slice(-2)+":"+("0"+cn.getUTCMinutes()).slice(-2);
+      const nx=tb&&tb.rows.find(x=>/^\d{1,2}:\d\d$/.test(x[0]||"")&&x[0].padStart(5,"0")>=hm);
+      o.push(`<article class="card rise today" style="padding:14px 16px"><b>📅 วันนี้ · วัน ${dn}</b><p class="note">${esc0(r[2])} • พัก: ${esc0(r[3])}</p>${nx?`<p>⏭️ ถัดไป ${esc0(nx[0])} · ${esc0(nx[1])}</p>`:`<p class="note">หมดกิจกรรมตามแผนวันนี้แล้ว</p>`}${tb?`<a class="go" data-go="${esc0(tb.title)}">ดูแผนวันนี้ →</a>`:""}</article>`);
+    }
+  }
+  [["Waiting Hotel",Date.UTC(2026,11,24,10)],["Mehood",Date.UTC(2026,11,26,10)],["Kimpton",Date.UTC(2026,11,26,16)]].forEach(([n,t])=>{const d=t-now;if(d>0&&d<14*864e5)o.push(`<article class="card rise" style="padding:12px 16px"><b>⏰ ยกเลิกฟรี ${n} ใกล้หมดเวลา</b><p class="note">เหลืออีก ${d>864e5?Math.floor(d/864e5)+" วัน":Math.max(1,Math.floor(d/36e5))+" ชม."} ก่อนเสียค่ายกเลิก</p></article>`)});
+  return o.join("");
+}
 function fxView(){
   const rate=LS.g("rate",RATE),P=[10,20,50,100,200,500,1000,2000],I='type="number" inputmode="decimal" style="font-size:22px"';
   return `<header class="sec"><h2 style="font-size:15px;margin-top:6px">💱 แปลงเงิน ¥ ↔ ฿</h2><p class="note">พิมพ์ช่องไหนก็ได้ อีกช่องคำนวณให้ • เรตตั้งต้นเป็นค่าสมมติ แก้เป็นเรตจริงตอนแลกเงิน (ใช้เฉพาะหน้านี้)</p></header><article class="card rise" style="padding:16px"><div class="cy" style="grid-template-columns:1fr 1fr"><label>¥ หยวน (CNY)<input id="cc" ${I}></label><label>฿ บาท (THB)<input id="cb" ${I}></label></div><div class="cy" style="grid-template-columns:1fr;margin-top:12px"><label>เรต ฿ ต่อ ¥1<input id="cr" type="number" inputmode="decimal" step="0.01" value="${rate}"></label></div></article><h3 class="sect">ราคาที่เจอบ่อย (แตะเพื่อใส่ในช่อง ¥)</h3><article class="card rise" style="padding:6px 16px">${P.map(y=>`<div class="tr" data-fy="${y}" style="cursor:pointer"><b>¥${y.toLocaleString("en-US")}</b><span data-y="${y}">฿${Math.round(y*rate).toLocaleString("en-US")}</span></div>`).join("")}</article>`;
@@ -557,23 +576,28 @@ function toolsView(){
   const q=encodeURIComponent,chk=(g,items)=>{const s=LS.g(g,{});return items.map(([l,sb],i)=>`<button class="ck2${s[g+i]?" on":""}" data-ck="${g}:${g+i}"><span></span><div>${l}${sb?`<small style="display:block;color:var(--mut);font-size:12px">${sb}</small>`:""}</div></button>`).join("")};
   const rate=LS.g("rate",RATE),ex=LS.g("ex",[]),bt=(tabs[0].rows.find(r=>(r[0]||"").startsWith("รวมงบ"))||[])[8],sum=ex.reduce((a,x)=>a+x.a,0);
   let o=`<header class="sec"><h2>🧰 เครื่องมือระหว่างทริป</h2><p class="note">ข้อมูลที่ติ๊ก/กรอกเก็บไว้ในเครื่องนี้ (ไม่ซิงก์ข้ามเครื่อง)</p></header>`;o+=fxView();
-  o+=card("📍","ที่อยู่ภาษาจีน","โชว์คนขับ / ใส่ Didi ได้เลย",AD.map(([a,z])=>`<div class="tr"><div><b>${a}</b><div class="zh">${z}</div></div><div class="ac"><button class="chip" data-cp="${z}">คัดลอก</button><a class="chip" target="_blank" rel="noopener" href="https://maps.apple.com/?q=${q(z)}">แผนที่</a><a class="chip" target="_blank" rel="noopener" href="https://uri.amap.com/search?keyword=${q(z)}">高德</a></div></div>`).join("")+`<p class="note">ตรวจชื่อ/เลขที่ในแอปแผนที่อีกครั้งก่อนใช้ • Google Maps ใช้ในจีนไม่ค่อยได้ ลองแผนที่/高德แทน</p>`);
+  o+=card("📍","ที่อยู่ภาษาจีน","โชว์คนขับ / ใส่ Didi ได้เลย",AD.map(([a,z])=>`<div class="tr"><div><b>${a}</b><div class="zh">${z}</div></div><div class="ac"><button class="chip" data-big="${z}">โชว์</button><a class="chip" target="_blank" rel="noopener" href="https://maps.apple.com/?q=${q(z)}">แผนที่</a><a class="chip" target="_blank" rel="noopener" href="https://uri.amap.com/search?keyword=${q(z)}">高德</a></div></div>`).join("")+`<p class="note">ตรวจชื่อ/เลขที่ในแอปแผนที่อีกครั้งก่อนใช้ • Google Maps ใช้ในจีนไม่ค่อยได้ ลองแผนที่/高德แทน</p>`);
   o+=card("💬","วลีภาษาจีนที่ใช้บ่อย","เลือกหมวด · แตะประโยคเพื่อฟังเสียง",PHC.map(([c,l],ci)=>`<details class="pdd"${ci===0?" open":""}><summary>${c}<small>${l.length}</small></summary>`+l.map(([a,z,p])=>`<div class="tr spk" data-sp="${z}"><div><b>${a}</b><div class="zh">${z}</div><small>${p}</small></div><span class="spi">🔊</span></div>`).join("")+`</details>`).join("")+`<p class="note">เสียงมาจากเครื่องของคุณ ถ้าไม่มีเสียง ให้เปิดเสียงมือถือและเพิ่มเสียงภาษาจีนใน ตั้งค่า → การช่วยการเข้าถึง → เนื้อหาที่อ่านออกเสียง (iPhone)</p>`);
   o+=card("🎒","แพ็คกระเป๋า","ติ๊กแล้วจำไว้",PK.map(([g,it],gi)=>`<div class="tt">${g}</div>`+chk("pk"+gi,it.map(x=>[x]))).join(""));
   o+=card("🎟️","ตั๋วที่ต้องซื้อล่วงหน้า","ติ๊กเมื่อซื้อแล้ว",chk("tk",TK)+`<div class="tt">เส้นตายยกเลิกฟรี</div><p class="note">Waiting Hotel ก่อน 18:00 วันที่ 24 ธ.ค. • Mehood ก่อน 18:00 วันที่ 26 ธ.ค. • Kimpton ก่อน 27 ธ.ค.</p>`);
-  o+=card("🧾","ค่าใช้จ่ายจริง","ใช้ไป ¥"+sum.toLocaleString("en-US")+" (฿"+R(sum)+")"+(num(bt)?" จากงบ ¥"+num(bt).toLocaleString("en-US"):""),`<div class="fx"><select id="exd">${[1,2,3,4,5,6,7].map(d=>`<option value="${d}">วัน ${d}</option>`).join("")}</select><input id="exa" type="number" inputmode="decimal" placeholder="¥ จำนวน"><input id="exn" placeholder="รายการ"></div><button class="chip" id="exadd">+ เพิ่ม</button>`+ex.map((x,i)=>`<div class="tr"><div><b>วัน ${x.d} · ¥${x.a.toLocaleString("en-US")}</b><small>${E(x.n||"")}</small></div><button class="chip" data-exdel="${i}">ลบ</button></div>`).join(""));
+  o+=card("🧾","ค่าใช้จ่ายจริง","ใช้ไป ¥"+sum.toLocaleString("en-US")+" (฿"+R(sum)+")"+(num(bt)?" จากงบ ¥"+num(bt).toLocaleString("en-US"):""),`<div class="fx"><select id="exd">${[1,2,3,4,5,6,7].map(d=>`<option value="${d}">วัน ${d}</option>`).join("")}</select><input id="exa" type="number" inputmode="decimal" placeholder="¥ จำนวน"><input id="exn" placeholder="รายการ"></div><div class="fx" style="grid-template-columns:1fr"><select id="exp"><option value="A">Peingwaree เป็นคนจ่าย</option><option value="B">Pichitra เป็นคนจ่าย</option></select></div><button class="chip" id="exadd">+ เพิ่ม</button>`+ex.map((x,i)=>`<div class="tr"><div><b>วัน ${x.d} · ¥${x.a.toLocaleString("en-US")}</b><small>${x.p==="B"?"Pichitra":"Peingwaree"} จ่าย · ${E(x.n||"")}</small></div><button class="chip" data-exdel="${i}">ลบ</button></div>`).join("")+splitEx(ex));
   o+=card("🆘","ข้อมูลฉุกเฉิน",UNL?"เบอร์สำคัญ + บันทึกส่วนตัว":"ใส่รหัสเพื่อดู",UNL?`<div class="tr"><div><b>ตำรวจ</b></div><a class="chip" href="tel:110">110</a></div><div class="tr"><div><b>รถพยาบาล</b></div><a class="chip" href="tel:120">120</a></div><div class="tr"><div><b>ดับเพลิง</b></div><a class="chip" href="tel:119">119</a></div><div class="tr"><div><b>อุบัติเหตุจราจร</b></div><a class="chip" href="tel:122">122</a></div><div class="tr"><div><b>Call Center กรมการกงสุล (24 ชม.)</b><small>เบอร์เมื่อปี 2565 ตรวจอีกครั้งก่อนไป</small></div><a class="chip" href="tel:+6625728442">+66 2 572 8442</a></div><div class="tt">บันทึกของฉัน (เบอร์กงสุลเซี่ยงไฮ้ / กรมธรรม์ / ผู้ติดต่อฉุกเฉิน)</div><textarea class="nt" data-note="em">${E(LS.g("note_em",""))}</textarea>`:`<p class="note"><span class="sx">••••••</span> แตะเพื่อใส่รหัส</p>`);
+  o+=card("📝","บันทึกรายวัน","จดสั้นๆ ต่อวัน (เก็บในเครื่อง)",[1,2,3,4,5,6,7].map(d=>`<div class="tt">วัน ${d}</div><textarea class="nt" data-note="d${d}" placeholder="ร้านที่อยากกลับไปอีก / ความทรงจำ">${E(LS.g("note_d"+d,""))}</textarea>`).join(""));
+  o+=card("🍜","เมนูที่ต้องลอง","แตะเพื่อฟังเสียง เอาไปสั่งได้เลย",MN.map(([a,z,p])=>`<div class="tr spk" data-sp="${z}"><div><b>${a}</b><div class="zh">${z}</div><small>${p}</small></div><span class="spi">🔊</span></div>`).join(""));
+  o+=card("🚇","เดินทางในเซี่ยงไฮ้","รถไฟใต้ดิน • แท็กซี่ • Didi",`<div class="tt">รถไฟฟ้าใต้ดิน (ทุกสาย)</div><p class="note">① แตะบัตร Visa / Mastercard / UnionPay แบบ contactless ที่ประตูได้เลย (ต้องเปิดชำระจำนวนน้อยไม่ใช้รหัส) • ② แอป Metro Daduhui (大都会) สมัครด้วยพาสปอร์ตแล้วผูกบัตรต่างประเทศ สแกน QR ผ่านประตู • ③ บัตรไม่ผ่าน ให้ขอซื้อตั๋วเที่ยวเดียวกับเจ้าหน้าที่ หรือจ่ายเงินสด ¥ / Alipay / WeChat ที่ตู้</p><div class="tt">แท็กซี่</div><p class="note">โชว์ที่อยู่จีนเต็มจอ (ปุ่ม “โชว์” ในการ์ดที่อยู่) และบอกให้เปิดมิเตอร์</p><div class="tr spk" data-sp="请打表"><div><b>เปิดมิเตอร์ด้วย</b><div class="zh">请打表</div><small>qǐng dǎ biǎo</small></div><span class="spi">🔊</span></div><div class="tt">Didi</div><p class="note">ใช้แอป DiDi หรือเมนู DiDi ใน Alipay ใส่ปลายทางเป็นภาษาจีนจากการ์ดที่อยู่ ตั้งค่าและทดลองจ่ายเงินก่อนออกเดินทาง (ขั้นตอนในแอปอาจเปลี่ยนได้)</p>`);
   o+=card("📶","ใช้ออฟไลน์","เผื่อเน็ตไม่เสถียร",`<p class="note">บันทึกไฟล์นี้ลงมือถือ (แอปไฟล์) แล้วเปิดจากไฟล์ได้โดยไม่ต้องมีเน็ต ข้อมูลเป็นชุดสำรอง ณ วันที่ทำไฟล์ พยากรณ์อากาศจะเป็นค่าเฉลี่ย</p>`);
   return o;
 }
 document.addEventListener("click",e=>{
+  const bg=e.target.closest("[data-big]");if(bg){$("#bigt").textContent=bg.dataset.big;$("#big").hidden=false;return}
+  if(e.target.closest("#big")){$("#big").hidden=true;return}
   const fy=e.target.closest("[data-fy]");if(fy){const c=$("#cc");c.value=fy.dataset.fy;c.dispatchEvent(new Event("input",{bubbles:true}));return}
   const sp=e.target.closest("[data-sp]");if(sp){speak(sp.dataset.sp,sp);return}
   const c=e.target.closest("[data-cp]");
   if(c){cp(c.dataset.cp);const o=c.textContent;c.textContent="✓";setTimeout(()=>{c.textContent=o},900);return}
   const k=e.target.closest("[data-ck]");
   if(k){const[g,i]=k.dataset.ck.split(":"),s=LS.g(g,{});s[i]=!s[i];LS.s(g,s);k.classList.toggle("on",!!s[i]);return}
-  if(e.target.closest("#exadd")){const a=parseFloat($("#exa").value);if(!(a>0))return;const ex=LS.g("ex",[]);ex.push({d:+$("#exd").value,a,n:$("#exn").value});LS.s("ex",ex);rr();return}
+  if(e.target.closest("#exadd")){const a=parseFloat($("#exa").value);if(!(a>0))return;const ex=LS.g("ex",[]);ex.push({d:+$("#exd").value,a,n:$("#exn").value,p:$("#exp").value});LS.s("ex",ex);rr();return}
   const d=e.target.closest("[data-exdel]");
   if(d){const ex=LS.g("ex",[]);ex.splice(+d.dataset.exdel,1);LS.s("ex",ex);rr()}
 });
