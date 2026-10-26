@@ -179,6 +179,9 @@ a.drv{cursor:pointer;text-decoration:underline}.lk{font-size:10px;margin-right:4
 .spk{cursor:pointer;-webkit-tap-highlight-color:transparent}.spk.pl .zh{color:#fff;text-shadow:0 0 10px var(--glow)}
 .spi{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid var(--line);font-size:15px}.spk:active .spi,.spk.pl .spi{background:rgba(255,255,255,.3)}
 #big{position:fixed;inset:0;z-index:90;background:#fff;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}#big[hidden]{display:none}#bigt{font-size:min(14vw,64px);font-weight:600;line-height:1.35;word-break:break-all}#big p{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));margin:0;color:#666;font-size:13px}
+#nowbar{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:20;padding:10px 14px;border-radius:16px;background:rgba(30,32,34,.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);font-size:13px;display:none;cursor:pointer}#nowbar.on{display:block}
+#bigt img{max-width:100%;max-height:78vh;border-radius:8px}
+@media print{#tabs,.dock,#nowbar,.qa,#st,#pin,#big,.chip,textarea{display:none!important}*{color:#000!important;background:transparent!important;box-shadow:none!important}}
 .pdd{border-top:1px solid var(--line)}.pdd:first-of-type{border-top:0}
 .pdd summary{list-style:none;cursor:pointer;display:flex;align-items:center;padding:12px 0;font-weight:500;font-size:14.5px}.pdd summary::-webkit-details-marker{display:none}
 .pdd summary small{color:var(--mut);font-size:12px;margin-left:auto;margin-right:10px}
@@ -193,6 +196,7 @@ a.drv{cursor:pointer;text-decoration:underline}.lk{font-size:10px;margin-right:4
 <div class="qa"><button class="chip" id="drvb">📎 <span></span></button><button class="chip" id="lkb" hidden></button></div>
 <main id="main"></main>
 </div>
+<div id="nowbar"></div>
 <div id="big" hidden><div id="bigt"></div><p>แตะที่ใดก็ได้เพื่อปิด</p></div>
 <div id="pin" aria-modal="true" role="dialog"><h3></h3><p id="pm"></p><div id="pd"><i></i><i></i><i></i><i></i></div><div id="pg"></div></div>
 <div class="dock"><div id="tabs"></div></div>
@@ -486,7 +490,7 @@ function render(anim){
 const DRIVE="https://drive.google.com/drive/folders/1sVreXvah_TnnyrbXIQCgCyjrJPcddg6h?usp=share_link";
 const PH="ODg4OA==";
 let UNL=false,buf="",pcb=null,fails=0,until=0,idle=0;
-function chips(){
+function chips(){nowBar();
   $("#drvb span").textContent=WL("ใบจอง (Google Drive)","Booking files (Google Drive)","订单文件 (Google Drive)");
   const l=$("#lkb");l.hidden=!UNL;l.textContent="🔓 "+WL("ล็อก","Lock","锁定");
 }
@@ -552,6 +556,33 @@ function cp(x){const fb=()=>{const a=document.createElement("textarea");a.value=
 const MN=[["เซิ่งเจียน (ซาลาเปาทอด)","生煎包","shēngjiānbāo"],["เสี่ยวหลงเปา","小笼包","xiǎolóngbāo"],["หมูสามชั้นตุ๋นแดง","红烧肉","hóngshāoròu"],["บะหมี่น้ำมันต้นหอม","葱油拌面","cōngyóu bànmiàn"],["ซี่โครงหมูเปรี้ยวหวาน","糖醋小排","tángcù xiǎopái"],["เกี๊ยวน้ำ","馄饨","húntun"],["ชานม","奶茶","nǎichá"]];
 const mapBtn=t=>/เช็คเอาท์|กลับโรงแรม|ถึงสนามบิน|ออกเดินทาง|เดินทางเข้าเมือง/.test(t)?"":`<p><a class="chip" target="_blank" rel="noopener" href="https://maps.apple.com/?q=${encodeURIComponent(t+" Shanghai")}">📍 แผนที่</a> <a class="chip" target="_blank" rel="noopener" href="https://uri.amap.com/search?keyword=${encodeURIComponent(t)}">高德</a></p>`;
 function splitEx(ex){if(!ex.length)return"";let a=0,b=0;ex.forEach(x=>{if(x.p==="B")b+=x.a;else a+=x.a});const d=(a-b)/2,f=v=>v.toLocaleString("en-US",{maximumFractionDigits:2});return `<p class="note">Peingwaree จ่าย ¥${f(a)} • Pichitra จ่าย ¥${f(b)} • `+(Math.abs(d)<.005?"หารกันพอดี":d>0?`Pichitra โอนให้ Peingwaree ¥${f(d)} (฿${R(d)})`:`Peingwaree โอนให้ Pichitra ¥${f(-d)} (฿${R(-d)})`)+`</p>`}
+function nowInfo(){
+  const now=Date.now(),cn=new Date(now+8*36e5),dn=Math.floor((now+8*36e5)/864e5)-Math.floor(Date.UTC(2026,11,24)/864e5)+1;
+  if(dn<1||dn>7)return null;
+  const tb=tabs.find(z=>z.title.startsWith("วัน"+dn)),hm=("0"+cn.getUTCHours()).slice(-2)+":"+("0"+cn.getUTCMinutes()).slice(-2);
+  const nx=tb&&tb.rows.find(x=>/^\d{1,2}:\d\d$/.test(x[0]||"")&&x[0].padStart(5,"0")>=hm);
+  return{dn,tb,nx};
+}
+function leave(t){const[h,m]=t.split(":").map(Number),x=Math.max(0,h*60+m-45);return("0"+Math.floor(x/60)).slice(-2)+":"+("0"+x%60).slice(-2)}
+function nowBar(){const b=$("#nowbar"),i=nowInfo();if(!b)return;if(!i||cur===0||!i.nx){b.classList.remove("on");return}b.innerHTML=`📅 วัน ${i.dn} · ถัดไป ${esc0(i.nx[0])} ${esc0(i.nx[1])} <small style="color:var(--mut)">(ออกจากที่พักก่อน ~${leave(i.nx[0].padStart(5,"0"))})</small>`;b.classList.add("on")}
+document.addEventListener("click",e=>{
+  const T=e.target;
+  if(T.closest("#tixb")){$("#tixf").click();return}
+  const tx=T.closest("[data-tix]");if(tx){const x=LS.g("tix",[])[+tx.dataset.tix];if(x){$("#bigt").innerHTML='<img src="'+x.s+'">';$("#big").hidden=false}return}
+  const td=T.closest("[data-tixdel]");if(td){const a=LS.g("tix",[]);a.splice(+td.dataset.tixdel,1);LS.s("tix",a);rr();return}
+  if(T.closest("#gfadd")){const n=$("#gfn").value.trim();if(!n)return;const a=LS.g("gf",[]);a.push({n,p:parseFloat($("#gfp").value)||0,k:0});LS.s("gf",a);rr();return}
+  const gk=T.closest("[data-gf]");if(gk){const a=LS.g("gf",[]),x=a[+gk.dataset.gf];if(x){x.k=x.k?0:1;if(x.k&&x.p&&!x.e){x.e=1;const ex=LS.g("ex",[]),i=nowInfo();ex.push({d:i?i.dn:1,a:x.p,n:"ของฝาก: "+x.n,p:"A"});LS.s("ex",ex)}LS.s("gf",a);rr()}return}
+  const gd=T.closest("[data-gfdel]");if(gd){const a=LS.g("gf",[]);a.splice(+gd.dataset.gfdel,1);LS.s("gf",a);rr();return}
+  if(T.closest("#bkc")){const o={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith("st_")&&k!=="st_tix")o[k]=localStorage.getItem(k)}}catch(x){}cp(JSON.stringify(o));T.textContent="✓ คัดลอกแล้ว";return}
+  if(T.closest("#bkd")){try{const o=JSON.parse($("#bki").value);for(const k in o)if(k.startsWith("st_"))localStorage.setItem(k,o[k]);rr()}catch(x){T.textContent="ข้อมูลไม่ถูกต้อง"}return}
+  if(T.closest("#prt"))window.print();
+});
+document.addEventListener("change",e=>{
+  if(e.target.id!=="tixf"||!e.target.files[0])return;
+  const f=e.target.files[0],r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);let n="";try{n=prompt("ชื่อตั๋ว")||""}catch(x){}const a=LS.g("tix",[]);a.push({n:n||f.name,s:c.toDataURL("image/jpeg",.8)});LS.s("tix",a);rr()};im.src=r.result};
+  r.readAsDataURL(f);
+});
 function topCards(){
   const now=Date.now(),cn=new Date(now+8*36e5),o=[];
   const dn=Math.floor((now+8*36e5)/864e5)-Math.floor(Date.UTC(2026,11,24)/864e5)+1;
@@ -560,15 +591,16 @@ function topCards(){
     if(r){
       const tb=tabs.find(z=>z.title.startsWith("วัน"+dn)),hm=("0"+cn.getUTCHours()).slice(-2)+":"+("0"+cn.getUTCMinutes()).slice(-2);
       const nx=tb&&tb.rows.find(x=>/^\d{1,2}:\d\d$/.test(x[0]||"")&&x[0].padStart(5,"0")>=hm);
-      o.push(`<article class="card rise today" style="padding:14px 16px"><b>📅 วันนี้ · วัน ${dn}</b><p class="note">${esc0(r[2])} • พัก: ${esc0(r[3])}</p>${nx?`<p>⏭️ ถัดไป ${esc0(nx[0])} · ${esc0(nx[1])}</p>`:`<p class="note">หมดกิจกรรมตามแผนวันนี้แล้ว</p>`}${tb?`<a class="go" data-go="${esc0(tb.title)}">ดูแผนวันนี้ →</a>`:""}</article>`);
+      o.push(`<article class="card rise today" style="padding:14px 16px"><b>📅 วันนี้ · วัน ${dn}</b><p class="note">${esc0(r[2])} • พัก: ${esc0(r[3])}</p>${nx?`<p>⏭️ ถัดไป ${esc0(nx[0])} · ${esc0(nx[1])}</p><p class="note">แนะนำออกจากที่พักก่อน ~${leave(nx[0].padStart(5,"0"))} (ประมาณการ เผื่อเดินทาง 45 นาที)</p>`:`<p class="note">หมดกิจกรรมตามแผนวันนี้แล้ว</p>`}${tb?`<a class="go" data-go="${esc0(tb.title)}">ดูแผนวันนี้ →</a>`:""}</article>`);
     }
   }
+  if(dn<1){const d=Math.ceil((Date.UTC(2026,11,23,16)-now)/864e5);if(d>0)o.push(`<article class="card rise" style="padding:14px 16px"><b>✈️ อีก ${d} วัน ถึงวันเดินทาง</b><p class="note">24 ธ.ค. 2026 • เช็คลิสต์และตั๋วอยู่ในแท็บ 🧰 เครื่องมือ</p></article>`)}
   [["Waiting Hotel",Date.UTC(2026,11,24,10)],["Mehood",Date.UTC(2026,11,26,10)],["Kimpton",Date.UTC(2026,11,26,16)]].forEach(([n,t])=>{const d=t-now;if(d>0&&d<14*864e5)o.push(`<article class="card rise" style="padding:12px 16px"><b>⏰ ยกเลิกฟรี ${n} ใกล้หมดเวลา</b><p class="note">เหลืออีก ${d>864e5?Math.floor(d/864e5)+" วัน":Math.max(1,Math.floor(d/36e5))+" ชม."} ก่อนเสียค่ายกเลิก</p></article>`)});
   return o.join("");
 }
 function fxView(){
-  const rate=LS.g("rate",RATE),P=[10,20,50,100,200,500,1000,2000],I='type="number" inputmode="decimal" style="font-size:22px"';
-  return `<header class="sec"><h2 style="font-size:15px;margin-top:6px">💱 แปลงเงิน ¥ ↔ ฿</h2><p class="note">พิมพ์ช่องไหนก็ได้ อีกช่องคำนวณให้ • เรตตั้งต้นเป็นค่าสมมติ แก้เป็นเรตจริงตอนแลกเงิน (ใช้เฉพาะหน้านี้)</p></header><article class="card rise" style="padding:16px"><div class="cy" style="grid-template-columns:1fr 1fr"><label>¥ หยวน (CNY)<input id="cc" ${I}></label><label>฿ บาท (THB)<input id="cb" ${I}></label></div><div class="cy" style="grid-template-columns:1fr;margin-top:12px"><label>เรต ฿ ต่อ ¥1<input id="cr" type="number" inputmode="decimal" step="0.01" value="${rate}"></label></div></article><h3 class="sect">ราคาที่เจอบ่อย (แตะเพื่อใส่ในช่อง ¥)</h3><article class="card rise" style="padding:6px 16px">${P.map(y=>`<div class="tr" data-fy="${y}" style="cursor:pointer"><b>¥${y.toLocaleString("en-US")}</b><span data-y="${y}">฿${Math.round(y*rate).toLocaleString("en-US")}</span></div>`).join("")}</article>`;
+  const rate=LS.g("rate",RATE),P=[10,50,100,200,500,1000],I='type="number" inputmode="decimal" style="font-size:22px"';
+  return `<header class="sec"><h2 style="font-size:15px;margin-top:6px">💱 แปลงเงิน ¥ ↔ ฿</h2><p class="note">พิมพ์ช่องไหนก็ได้ อีกช่องคำนวณให้ • เรตตั้งต้นเป็นค่าสมมติ แก้เป็นเรตจริงตอนแลกเงิน (ใช้เฉพาะหน้านี้)</p></header><article class="card rise" style="padding:16px"><div class="cy" style="grid-template-columns:1fr 1fr"><label>¥ หยวน (CNY)<input id="cc" ${I}></label><label>฿ บาท (THB)<input id="cb" ${I}></label></div><div class="cy" style="grid-template-columns:1fr;margin-top:12px"><label>เรต ฿ ต่อ ¥1<input id="cr" type="number" inputmode="decimal" step="0.01" value="${rate}"></label></div></article><div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px">${P.map(y=>`<button class="chip" data-fy="${y}" style="font-size:12px;padding:5px 10px">¥${y.toLocaleString("en-US")} · <span data-y="${y}">฿${Math.round(y*rate).toLocaleString("en-US")}</span></button>`).join("")}</div>`;
 }
 function toolsView(){
   let n=0;const E=esc0;
@@ -584,6 +616,10 @@ function toolsView(){
   o+=card("🆘","ข้อมูลฉุกเฉิน",UNL?"เบอร์สำคัญ + บันทึกส่วนตัว":"ใส่รหัสเพื่อดู",UNL?`<div class="tr"><div><b>ตำรวจ</b></div><a class="chip" href="tel:110">110</a></div><div class="tr"><div><b>รถพยาบาล</b></div><a class="chip" href="tel:120">120</a></div><div class="tr"><div><b>ดับเพลิง</b></div><a class="chip" href="tel:119">119</a></div><div class="tr"><div><b>อุบัติเหตุจราจร</b></div><a class="chip" href="tel:122">122</a></div><div class="tr"><div><b>Call Center กรมการกงสุล (24 ชม.)</b><small>เบอร์เมื่อปี 2565 ตรวจอีกครั้งก่อนไป</small></div><a class="chip" href="tel:+6625728442">+66 2 572 8442</a></div><div class="tt">บันทึกของฉัน (เบอร์กงสุลเซี่ยงไฮ้ / กรมธรรม์ / ผู้ติดต่อฉุกเฉิน)</div><textarea class="nt" data-note="em">${E(LS.g("note_em",""))}</textarea>`:`<p class="note"><span class="sx">••••••</span> แตะเพื่อใส่รหัส</p>`);
   o+=card("📝","บันทึกรายวัน","จดสั้นๆ ต่อวัน (เก็บในเครื่อง)",[1,2,3,4,5,6,7].map(d=>`<div class="tt">วัน ${d}</div><textarea class="nt" data-note="d${d}" placeholder="ร้านที่อยากกลับไปอีก / ความทรงจำ">${E(LS.g("note_d"+d,""))}</textarea>`).join(""));
   o+=card("🍜","เมนูที่ต้องลอง","แตะเพื่อฟังเสียง เอาไปสั่งได้เลย",MN.map(([a,z,p])=>`<div class="tr spk" data-sp="${z}"><div><b>${a}</b><div class="zh">${z}</div><small>${p}</small></div><span class="spi">🔊</span></div>`).join(""));
+  o+=card("🎫","ตั๋ว / QR เต็มจอ","เซฟภาพตั๋วไว้ในเครื่อง แตะเพื่อขยาย",`<input type="file" accept="image/*" id="tixf" style="display:none"><button class="chip" id="tixb">+ เพิ่มภาพตั๋ว</button>`+LS.g("tix",[]).map((x,i)=>`<div class="tr"><div class="spk" data-tix="${i}"><b>${E(x.n)}</b><small>แตะเพื่อเปิดเต็มจอ</small></div><button class="chip" data-tixdel="${i}">ลบ</button></div>`).join("")+`<p class="note">พาสปอร์ตหรือตั๋วที่มีข้อมูลส่วนตัว เก็บในเครื่องนี้เท่านั้น ไม่รวมในข้อมูลสำรอง</p>`);
+  o+=card("🛍️","ของฝาก / ช้อปปิ้ง","ติ๊กเมื่อซื้อแล้ว ใส่ราคาแล้วเข้าค่าใช้จ่ายให้",`<div class="fx" style="grid-template-columns:1fr 100px"><input id="gfn" placeholder="ซื้ออะไร"><input id="gfp" type="number" inputmode="decimal" placeholder="¥ ราคา"></div><button class="chip" id="gfadd">+ เพิ่ม</button>`+LS.g("gf",[]).map((x,i)=>`<div class="tr"><button class="ck2${x.k?" on":""}" data-gf="${i}"><span></span>${E(x.n)}${x.p?" · ¥"+x.p:""}</button><button class="chip" data-gfdel="${i}">ลบ</button></div>`).join(""));
+  o+=card("☔","แผน B วันฝนตก / หนาวจัด","ที่เที่ยวในร่ม",[["พิพิธภัณฑ์เซี่ยงไฮ้","上海博物馆 人民大道201号","ใกล้จัตุรัสประชาชน"],["พิพิธภัณฑ์ธรรมชาติวิทยา","上海自然博物馆 北京西路510号","จองด้วยพาสปอร์ต"]].map(([a,z,s])=>`<div class="tr"><div><b>${a}</b><div class="zh">${z}</div><small>${s}</small></div><div class="ac"><button class="chip" data-big="${z}">โชว์</button></div></div>`).join("")+`<p class="note">ไอเดียอื่น: นั่งคาเฟ่ นวดเท้า ช้อปปิ้งมอลล์ • รายการนี้เป็นแบบตายตัว ไม่ดึงตามพยากรณ์อัตโนมัติ</p>`);
+  o+=card("💾","สำรอง / พิมพ์","ย้ายข้อมูลข้ามเครื่อง • พิมพ์ PDF",`<button class="chip" id="bkc">คัดลอกข้อมูลสำรอง</button> <button class="chip" id="prt">🖨️ พิมพ์หน้านี้ / PDF</button><textarea class="nt" id="bki" placeholder="วางข้อมูลสำรองจากอีกเครื่องที่นี่ แล้วกด นำเข้า"></textarea><button class="chip" id="bkd">นำเข้า</button><p class="note">พิมพ์ได้ทีละแท็บ เลขจองที่ยังล็อกอยู่จะไม่ถูกพิมพ์ • ข้อมูลสำรองคือที่ติ๊ก/กรอก ไม่รวมภาพตั๋ว</p>`);
   o+=card("🚇","เดินทางในเซี่ยงไฮ้","รถไฟใต้ดิน • แท็กซี่ • Didi",`<div class="tt">รถไฟฟ้าใต้ดิน (ทุกสาย)</div><p class="note">① แตะบัตร Visa / Mastercard / UnionPay แบบ contactless ที่ประตูได้เลย (ต้องเปิดชำระจำนวนน้อยไม่ใช้รหัส) • ② แอป Metro Daduhui (大都会) สมัครด้วยพาสปอร์ตแล้วผูกบัตรต่างประเทศ สแกน QR ผ่านประตู • ③ บัตรไม่ผ่าน ให้ขอซื้อตั๋วเที่ยวเดียวกับเจ้าหน้าที่ หรือจ่ายเงินสด ¥ / Alipay / WeChat ที่ตู้</p><div class="tt">แท็กซี่</div><p class="note">โชว์ที่อยู่จีนเต็มจอ (ปุ่ม “โชว์” ในการ์ดที่อยู่) และบอกให้เปิดมิเตอร์</p><div class="tr spk" data-sp="请打表"><div><b>เปิดมิเตอร์ด้วย</b><div class="zh">请打表</div><small>qǐng dǎ biǎo</small></div><span class="spi">🔊</span></div><div class="tt">Didi</div><p class="note">ใช้แอป DiDi หรือเมนู DiDi ใน Alipay ใส่ปลายทางเป็นภาษาจีนจากการ์ดที่อยู่ ตั้งค่าและทดลองจ่ายเงินก่อนออกเดินทาง (ขั้นตอนในแอปอาจเปลี่ยนได้)</p>`);
   o+=card("📶","ใช้ออฟไลน์","เผื่อเน็ตไม่เสถียร",`<p class="note">บันทึกไฟล์นี้ลงมือถือ (แอปไฟล์) แล้วเปิดจากไฟล์ได้โดยไม่ต้องมีเน็ต ข้อมูลเป็นชุดสำรอง ณ วันที่ทำไฟล์ พยากรณ์อากาศจะเป็นค่าเฉลี่ย</p>`);
   return o;
@@ -591,6 +627,7 @@ function toolsView(){
 document.addEventListener("click",e=>{
   const bg=e.target.closest("[data-big]");if(bg){$("#bigt").textContent=bg.dataset.big;$("#big").hidden=false;return}
   if(e.target.closest("#big")){$("#big").hidden=true;return}
+  if(e.target.closest("#nowbar")){go(0);return}
   const fy=e.target.closest("[data-fy]");if(fy){const c=$("#cc");c.value=fy.dataset.fy;c.dispatchEvent(new Event("input",{bubbles:true}));return}
   const sp=e.target.closest("[data-sp]");if(sp){speak(sp.dataset.sp,sp);return}
   const c=e.target.closest("[data-cp]");
